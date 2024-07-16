@@ -1,0 +1,54 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="shortcut icon" href="%PUBLIC_URL%/favicon.icon" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#17c1e8" />
+    <link rel="apple-touch-icon" sizes="76x76" href="%PUBLIC_URL%/favicon.icon" />
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    <title>Casino - UniChat</title>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"
+    />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+      integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+      crossorigin=""
+    />
+    <link
+      href="https://fonts.googleapis.com/css?family=Material+Icons|Material+Icons+Outlined|Material+Icons+Two+Tone|Material+Icons+Round|Material+Icons+Sharp"
+      rel="stylesheet"
+    />
+  </head>
+
+  <body>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+    <script>
+      var g_InitData = null
+      document.addEventListener("DOMContentLoaded", function () {
+        // Check if Telegram Web App is available
+        if (typeof Telegram !== 'undefined' && Telegram.WebApp) {
+          g_InitData = Telegram.WebApp.initData;
+          g_InitData.ready();
+          g_InitData.expand();
+        } else {
+          console.log('Telegram Web App not available');
+        }
+      });
+      function sendToBot(jsonData) {
+        console.log(jsonData)
+        if (typeof Telegram !== 'undefined' && Telegram.WebApp) {
+          Telegram.WebApp.sendData(JSON.stringify(jsonData));
+        } else {
+          console.log('Telegram Web App not available');
+        }
+      }
+    </script>
+  </body>
+</html>
