@@ -4,7 +4,7 @@ import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import Header from "layouts/coinflip/components/Header";
 import GameField from "./components/GameField";
 
-function Coinflip() {
+function Slot() {
   return (
     <DashboardLayout>
       <Header />
@@ -18,4 +18,4 @@ function Coinflip() {
   );
 }
 
-export default Coinflip;
+export default Slot;
