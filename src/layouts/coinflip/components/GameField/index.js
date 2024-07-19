@@ -74,6 +74,9 @@ const GameField = () => {
   const {Price_ETH, Price_BNB} = useSelector((state) => state.price)
   const [provables, setProbables] = useState([])
   const dispatch = useDispatch();
+  useEffect(() => {
+    fetchBalance()
+  }, [userid])
   const getOtherSpin = (spin_type) => {
     if(spin_type == "spin-heads") {
       return "spin-heads-1"
@@ -86,28 +89,137 @@ const GameField = () => {
     }
   }
   const fetchBalance = async () => {
+    const config = {
+      method: 'POST',
+      url : `${CASINO_SERVER}/balance`,
+      data: {
+        UserID: userid,
+        // hash: hash
+      }          
+    }
+    const balance = await callAPI(config)
+    dispatch(setBalance(balance))
   }
   const getVisibleBalance = () => {
-    return 0
+    return parseFloat(((isUSD ? (type == 0 ? Price_ETH : Price_BNB) : 1) * (type == 0 ? balance.ETH : balance.BNB)).toFixed(4))
   }
   const funcBetAmount = (times) => {
+    const num = amount * times;
+    const money = isUSD ? num.toFixed(1) : num.toFixed(4)
+    const visibleBalance = getVisibleBalance();
+    setAmount( visibleBalance > money ? money : visibleBalance );
   }
   const handleKindChange = (event, newValue) => {
     setType(newValue);
     setAmount(0.0)
   };
   const funcBet = async () => {
-    setBet(true)
+    try {
+      setBetting(true)
+      setPrediction([])
+      setProbables([])
+      setCashout(0)
+      setCashoutColor(winColor)
+      const price = isUSD ? ( type == 0 ? Price_ETH : Price_BNB ) : 1;
+      const betAmount = parseFloat((parseFloat(amount) / price).toFixed(4))
+  
+      const config = {
+        method: 'POST',
+        url : `${CASINO_SERVER}/bet_coinflip`,
+        data: {
+          // hash: hash
+          UserID: userid,
+          coin_type: parseInt(type),
+          bet_amount: betAmount,
+        }          
+      }
+      const betRes = await callAPI(config)
+      const balance = {
+        "ETH" : betRes.ETH,
+        "BNB" : betRes.BNB,
+      }
+      setBet(true)
+      setBetting(false)
+      setServerHash(betRes.hash)
+      setServerNextHash(betRes.hash)
+      dispatch(setBalance(balance))
+  
+      console.log(betRes)
+    } catch {
+      setBet(false)
+      setBetting(false)
+    }
   }
   const coinflip = async (coin_side) => {
-    let spin_type = coin_side == 1 ? "spin-heads" : "spin-tails"
+    setPrediction([...prediction, coin_side])
+    setPlaying(true);
+    setServerHash(serverNextHash)
+    const config = {
+      method: 'POST',
+      url : `${CASINO_SERVER}/pred_coinflip`,
+      data: {
+        // hash: hash
+        UserID: userid,
+        server_hash: serverNextHash,
+        coin: coin_side,
+      }          
+    }
+    const flipRes = await callAPI(config);
+    console.log(flipRes);
+    if(flipRes.status == -1) {
+      console.log("GameError")
+      return
+    }
+    const coinResult = flipRes.result;
+    const winning_rate = flipRes.winning_rate;
+    const win = flipRes.win;
+    const color = win ? winColor : failedColor
+
+    let spin_type = coinResult == 1 ? "spin-heads" : "spin-tails"
+
+    if(spin_type == spin) {
+      spin_type = getOtherSpin(spin_type)
+    }
+
+    const seed = flipRes.seed;
+    const nonce = flipRes.nonce;
+    const prov = {
+      hash:serverHash,
+      seed,nonce
+    }
+
     setSpin(spin_type);
     setTimeout(() => {
+      setPlaying(false)
+      setCashoutColor(color)
+      setCashout(winning_rate)
+      setProbables([prov,...provables])
+      if(!win) {
+        setBet(false)
+      }
     }, 3000)
+
+
+
+    const next_hash = flipRes.next_hash;
+    setServerNextHash(next_hash)
   }
 
   const funcCashout = async () => {
-    setBet(fasle)
+    //balance will increase
+    setBet(false)
+    const config = {
+      method: 'POST',
+      url : `${CASINO_SERVER}/cashout_coinflip`,
+      data: {
+        // hash: hash
+        UserID: userid,
+        server_hash: serverHash,
+      }          
+    }
+    const endRes = await callAPI(config);
+    console.log(endRes)
+    await fetchBalance()
   }
   return (
     <Card sx={{ padding: "30px", mt:"10px" }}>
