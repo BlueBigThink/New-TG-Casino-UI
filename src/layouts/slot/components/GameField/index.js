@@ -25,7 +25,8 @@ import VuiInput from "components/VuiInput";
 import GradientBorder from "examples/GradientBorder";
 import borders from "assets/theme/base/borders";
 import radialGradient from "assets/theme/functions/radialGradient";
-import SlotCounter, { SlotCounterRef } from 'react-slot-counter';
+import SlotCounter from 'react-slot-counter';
+// import {SlotCounterRef} from 'react-slot-counter';
 
 import Cherry from '../../../../assets/images/slot/cherry.png'
 import Dollar from '../../../../assets/images/slot/dollar.png'
@@ -33,6 +34,7 @@ import Heart from '../../../../assets/images/slot/heart.png'
 import Seven from '../../../../assets/images/slot/seven.png'
 import Spade from '../../../../assets/images/slot/spade.png'
 import Tomato from '../../../../assets/images/slot/tomato.png'
+import BG from '../../../../assets/images/slot/bg.png'
 // React icons
 import { FaEthereum } from "react-icons/fa";
 import { SiBinance } from "react-icons/si";
@@ -75,8 +77,9 @@ const GameField = () => {
   const {userid, balance} = useSelector((state) => state.user)
   const {Price_ETH, Price_BNB} = useSelector((state) => state.price)
   const [provables, setProbables] = useState([])
-  const slotRef = React.useRef<SlotCounterRef>(null);
+  const slotRef = React.useRef(null);
   const [slots, setSlots] = useState([Seven,Seven,Seven,Seven,Seven])
+  const [prevSlots, setPrevSlots] = useState([Seven,Seven,Seven,Seven,Seven])
   const dispatch = useDispatch();
   useEffect(() => {
     fetchBalance()
@@ -107,8 +110,9 @@ const GameField = () => {
     setAmount(0.0)
   };
   const funcSlot = async () => {
+    setPrevSlots(slots)
     setSlots([Seven, Tomato, Cherry, Dollar, Seven])
-    slot5Ref.current.startAnimation()
+    slotRef.current.startAnimation()
   }
 
   const funcBet = async () => {
@@ -188,33 +192,35 @@ const GameField = () => {
         </Tabs>
       </VuiBox>
 
-      <VuiBox display="flex" flexDirection="column" mt={1}>
+      <VuiBox display="flex" flexDirection="column" mt={2}>
         <VuiBox
           mb="10px"
           p="20px"
           display="flex"
           flexDirection="column"
-          sx={{ backgroundImage: `url(${balancePng})`, backgroundSize: "cover", borderRadius: "18px" }}
+          sx={{ backgroundImage: `url(${BG})`, backgroundSize: "100% 100%", borderRadius: "18px" }}
         >
-          <VuiBox display="flex" justifyContent="space-beetween" alignItems="center">
+          <VuiBox id="slot-box" display="flex" justifyContent="space-beetween" alignItems="center">
             <SlotCounter
               ref={slotRef}
-              startValueOnce
+              startValueOnce = {true}
               autoAnimationStart={false}
-              duration = {1.0}
+              duration = {2.0}
+              speed = {10}
+              sx={{'& > span' : {margin : 'auto'}}}
               startValue={[
+                <img className="item item-small" src={prevSlots[0]} alt="" />,
+                <img className="item item-small" src={prevSlots[1]} alt="" />,
+                <img className="item item-small" src={prevSlots[2]} alt="" />,
+                <img className="item item-small" src={prevSlots[3]} alt="" />,
+                <img className="item item-small" src={prevSlots[4]} alt="" />,
+              ]}
+              value={[
                 <img className="item item-small" src={slots[0]} alt="" />,
                 <img className="item item-small" src={slots[1]} alt="" />,
                 <img className="item item-small" src={slots[2]} alt="" />,
                 <img className="item item-small" src={slots[3]} alt="" />,
                 <img className="item item-small" src={slots[4]} alt="" />,
-              ]}
-              value={[
-                <img className="item item-small" src={Seven} alt="" />,
-                <img className="item item-small" src={Seven} alt="" />,
-                <img className="item item-small" src={Seven} alt="" />,
-                <img className="item item-small" src={Seven} alt="" />,
-                <img className="item item-small" src={Seven} alt="" />,
               ]}
               dummyCharacters={[
                 <img className="item item-small" src={Cherry} alt="" />,
@@ -226,13 +232,13 @@ const GameField = () => {
               ]}
             />
           </VuiBox>
-          <VuiBox width="50%" m="auto">
-            <VuiTypography variant="h4" fontWeight="bold" sx={{textAlign:'center', color:cashoutColor }}>
-              x{cashout.toFixed(2)}
-            </VuiTypography>
-          </VuiBox>
         </VuiBox>
-        <VuiBox display="block" justifyContent="space-beetween" alignItems="center">
+        <VuiBox width="50%" m="auto" pb={1}>
+          <VuiTypography variant="h4" fontWeight="bold" sx={{textAlign:'center', color:cashoutColor }}>
+            x{cashout.toFixed(2)}
+          </VuiTypography>
+        </VuiBox>
+        <VuiBox display="block" justifyContent="space-beetween" alignItems="center" mb={1}>
           <Stack direction="row" spacing="10px" m="auto" >
             <VuiButton variant="contained" color="success" sx={{width:"100%", fontSize: "16px"}} onClick={funcSlot}>
               Slot
