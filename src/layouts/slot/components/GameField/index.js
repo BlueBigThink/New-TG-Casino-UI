@@ -59,24 +59,19 @@ const getCryptoName = (crypto) => {
   }
   return name
 }
-const winColor = '#20b800'
+const winColor = '#3bc216'
 const failedColor = '#f02000'
 const GameField = () => {
   const [cashoutColor, setCashoutColor] = useState(winColor)
-  const [spin, setSpin] = useState("");
   const [type, setType] = useState(ETH)
   const [bet, setBet] = useState(false)
   const [betting, setBetting] = useState(false)
   const [amount, setAmount] = useState(0.5)
-  const [playing, setPlaying] = useState(false);
   const [isUSD, seIsUSD] = useState(true);
-  const [serverHash, setServerHash] = useState("")
-  const [serverNextHash, setServerNextHash] = useState("")
   const [tabsOrientation, setTabsOrientation] = useState("horizontal");
   const [cashout, setCashout] = useState(0)
   const {userid, balance} = useSelector((state) => state.user)
   const {Price_ETH, Price_BNB} = useSelector((state) => state.price)
-  const [provables, setProbables] = useState([])
   const slotRef = React.useRef(null);
   const [slots, setSlots] = useState([Seven,Seven,Seven,Seven,Seven])
   const [prevSlots, setPrevSlots] = useState([Seven,Seven,Seven,Seven,Seven])
@@ -110,47 +105,16 @@ const GameField = () => {
     setAmount(0.0)
   };
   const funcSlot = async () => {
+    setBetting(true)
     setPrevSlots(slots)
     setSlots([Seven, Tomato, Cherry, Dollar, Seven])
     slotRef.current.startAnimation()
+    setTimeout(() => {
+      setBetting(false)
+    }, 3000)
+
   }
 
-  const funcBet = async () => {
-    try {
-      setBetting(true)
-      setProbables([])
-      setCashout(0)
-      setCashoutColor(winColor)
-      const price = isUSD ? ( type == 0 ? Price_ETH : Price_BNB ) : 1;
-      const betAmount = parseFloat((parseFloat(amount) / price).toFixed(4))
-  
-      const config = {
-        method: 'POST',
-        url : `${CASINO_SERVER}/bet_coinflip`,
-        data: {
-          // hash: hash
-          UserID: userid,
-          coin_type: parseInt(type),
-          bet_amount: betAmount,
-        }          
-      }
-      const betRes = await callAPI(config)
-      const balance = {
-        "ETH" : betRes.ETH,
-        "BNB" : betRes.BNB,
-      }
-      setBet(true)
-      setBetting(false)
-      setServerHash(betRes.hash)
-      setServerNextHash(betRes.hash)
-      dispatch(setBalance(balance))
-  
-      console.log(betRes)
-    } catch {
-      setBet(false)
-      setBetting(false)
-    }
-  }
   return (
     <Card sx={{ padding: "30px", mt:"10px" }}>
       <VuiBox mt={0.25} width="100%">
@@ -240,7 +204,19 @@ const GameField = () => {
         </VuiBox>
         <VuiBox display="block" justifyContent="space-beetween" alignItems="center" mb={1}>
           <Stack direction="row" spacing="10px" m="auto" >
-            <VuiButton variant="contained" color="success" sx={{width:"100%", fontSize: "16px"}} onClick={funcSlot}>
+            <VuiButton 
+              variant="contained" 
+              className="button-slot" 
+              sx={{
+                width:"100%", 
+                fontSize: "16px", 
+                backgroundColor:'#38c317', 
+                '&:disabled' : {backgroundColor : "#385317"}, 
+                '&:hover' : {backgroundColor : "#38c317"} 
+              }} 
+              onClick={funcSlot} 
+              disabled={amount <= 0 || betting}
+            >
               Slot
             </VuiButton>
           </Stack>
