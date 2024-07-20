@@ -198,8 +198,6 @@ const GameField = () => {
       }
     }, 3000)
 
-
-
     const next_hash = flipRes.next_hash;
     setServerNextHash(next_hash)
   }
