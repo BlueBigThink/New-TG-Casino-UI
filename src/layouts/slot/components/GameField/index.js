@@ -51,6 +51,7 @@ import './index.css'
 
 const ETH = 0;
 const BNB = 1;
+const SLOTS = [Cherry, Dollar, Heart, Seven, Spade, Tomato]
 const getCryptoName = (crypto) => {
   let name = ''
   switch(crypto) {
@@ -99,6 +100,36 @@ const GameField = () => {
   const [slots, setSlots] = useState([Seven,Seven,Seven,Seven,Seven])
   const [prevSlots, setPrevSlots] = useState([Seven,Seven,Seven,Seven,Seven])
   const dispatch = useDispatch();
+
+  const onSlot = (data) => {
+    console.log(data)
+    try{
+      const user_id = data['user_id']
+      if(user_id != userid) {
+        throw new Error("Socket data verification failed")
+      }
+      const slot_res = data['slot']
+      const slots_res = []
+      for(let i = 0; i < slot_res.length; i++) {
+        slots_res.push(SLOTS[slot_res[i]])
+      }
+      setSlots(slots_res)
+      slotRef.current.startAnimation()
+      setTimeout(() => {
+        setCashout(data['cashout'])
+        setBetting(false)
+      }, 3000)
+      fetchBalance()
+    }catch(e){
+      setBetting(false)
+      console.error('socket data error :', e.toString())
+    }
+  }
+
+  useEffect(() => {
+    socket.on('slot', onSlot)
+  }, [])  
+
   useEffect(() => {
     fetchBalance()
   }, [userid])
@@ -130,12 +161,18 @@ const GameField = () => {
   const funcSlot = async () => {
     setBetting(true)
     setPrevSlots(slots)
-    setSlots([Seven, Tomato, Cherry, Dollar, Seven])
-    slotRef.current.startAnimation()
-    setTimeout(() => {
-      setBetting(false)
-    }, 3000)
+    const price = isUSD ? ( type == 0 ? Price_ETH : Price_BNB ) : 1;
+    const betAmount = parseFloat((parseFloat(amount) / price).toFixed(4))
+    
+    const data = {
+      user_id : userid,
+      // hash,
+      cmd : 'bet',
+      bet_amount : betAmount,
+      coin_type: parseInt(type),
 
+    }
+    socket.emit('slot', data)
   }
 
   return (
