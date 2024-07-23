@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useRef, useImperativeHandle, forwardRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { PlinkoGameBody } from './components/GameBody';
@@ -12,7 +12,11 @@ import {
     Runner,
     World
 } from 'matter-js';
-import { incrementPlinkoRunning, decrementPlinkoRunning } from '../../../../slices/game.slice';
+import { 
+    incrementPlinkoRunning, 
+    decrementPlinkoRunning, 
+    addToPlinkoHistory 
+} from '../../../../slices/game.slice';
 import { config } from './config'
 import {
     getMultiplierByLinesQnt,
@@ -20,21 +24,23 @@ import {
 } from './config/multipliers'
 
 export const Game = forwardRef((props, ref) => {
+    const {level, startfunc, endfunc} = props;
     const engine = Engine.create();
     const dispatch = useDispatch();
     const [lines, setLines] = useState(16);
-    const { plinkoRunning } = useSelector(state => state.game);
     useImperativeHandle(ref, () => ({
-        bet(betValue){
-            addBall(betValue)
+        bet(type, betValue){
+            addBall(type, betValue)
         }
     }));
     const incrementInGameBallsCount = () => {
-        console.log("88888888888 : ", plinkoRunning)
-        dispatch(incrementPlinkoRunning(plinkoRunning));
+        dispatch(incrementPlinkoRunning());
     }
     const decrementInGameBallsCount = () => {
-        dispatch(decrementPlinkoRunning(plinkoRunning));
+        dispatch(decrementPlinkoRunning());
+    }
+    const addPlinkoHistory = (value) => {
+        dispatch(addToPlinkoHistory(value))
     }
     const [lastMultipliers, setLastMultipliers] = useState([]);
     const {
@@ -81,7 +87,7 @@ export const Game = forwardRef((props, ref) => {
             render.canvas.remove()
             render.textures = {}
         }
-    }, [lines])
+    }, [level])
 
     const pins = [] //Body[]
     for (let l = 0; l < lines; l++) {
@@ -102,16 +108,17 @@ export const Game = forwardRef((props, ref) => {
         }
     }
     const addInGameBall = () => {
-        if (plinkoRunning > 15) return
         incrementInGameBallsCount()
     }
-
     const removeInGameBall = () => {
         decrementInGameBallsCount()
     }
+    const saveHistory = (value) => {
+        addPlinkoHistory(value)
+    }
 
     const addBall = useCallback(
-        (ballValue) => {
+        (type, ballValue) => {
             addInGameBall()
             // const ballSound = new Audio(ballAudio)
             // ballSound.volume = 0.2
@@ -126,7 +133,7 @@ export const Game = forwardRef((props, ref) => {
             const ball = Bodies.circle(ballX, 20, ballConfig.ballSize, {
                 restitution: 1,
                 friction: 0.1,
-                label: `ball-${ballValue}`,
+                label: `ball-${ballValue}-${type}`,
                 id: new Date().getTime(),
                 frictionAir: 0.05,
                 collisionFilter: { group: -1 },
@@ -134,8 +141,9 @@ export const Game = forwardRef((props, ref) => {
                 isStatic: false
             })
             Composite.add(engine.world, ball)
+            startfunc(type, ballValue)
         },
-        [lines]
+        [level]
     )
     const leftWall = Bodies.rectangle(
         worldWidth / 3 - pinsConfig.pinSize * pinsConfig.pinGap - pinsConfig.pinGap,
@@ -167,7 +175,7 @@ export const Game = forwardRef((props, ref) => {
         render: { visible: false },
         isStatic: true
     })
-    const multipliers = getMultiplierByLinesQnt(lines)
+    const multipliers = getMultiplierByLinesQnt(level)
     const multipliersBodies = [] //Body[]
     let lastMultiplierX = worldWidth / 2 - (pinsConfig.pinGap / 2) * lines - pinsConfig.pinGap
     multipliers.forEach(multiplier => {
@@ -206,6 +214,7 @@ export const Game = forwardRef((props, ref) => {
         World.remove(engine.world, ball)
         removeInGameBall()
         const ballValue = ball.label.split('-')[1]
+        const type = ball.label.split('-')[2]
         const multiplierValue = +multiplier.label.split('-')[1]
 
         const multiplierSong = new Audio(getMultiplierSound(multiplierValue))
@@ -213,10 +222,12 @@ export const Game = forwardRef((props, ref) => {
         multiplierSong.volume = 0.2
         multiplierSong.play()
         setLastMultipliers(prev => [multiplierValue, prev[0], prev[1], prev[2]])
+        
+        saveHistory(multiplierValue)
+        endfunc(type, ballValue, multiplierValue)
 
-        console.log("ballValue :", ballValue)
-        if (+ballValue <= 0) return
-        const newBalance = +ballValue * multiplierValue
+        // if (+ballValue <= 0) return
+        // const newBalance = +ballValue * multiplierValue
     }
     async function onBodyCollision(event) {
         const pairs = event.pairs
