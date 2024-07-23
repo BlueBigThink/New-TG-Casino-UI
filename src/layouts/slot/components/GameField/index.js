@@ -8,7 +8,8 @@ import {
   Card, 
   Stack,
   Tab,
-  Tabs
+  Tabs,
+  Box
 } from "@mui/material";
 
 // Vision UI Dashboard assets
@@ -26,7 +27,10 @@ import GradientBorder from "examples/GradientBorder";
 import borders from "assets/theme/base/borders";
 import radialGradient from "assets/theme/functions/radialGradient";
 import SlotCounter from 'react-slot-counter';
-// import {SlotCounterRef} from 'react-slot-counter';
+
+import CircularProgress from '@mui/material/CircularProgress';
+
+import { useVisionUIController } from "context";
 
 import Cherry from '../../../../assets/images/slot/cherry.png'
 import Dollar from '../../../../assets/images/slot/dollar.png'
@@ -42,11 +46,12 @@ import { SiBinance } from "react-icons/si";
 import { setBalance } from "../../../../slices/user.slice";
 import callAPI from "../../../../api/index";
 import { CASINO_SERVER } from "../../../../variables/url";
-
+import {socket} from "../../../../socket";
 import './index.css'
 
 const ETH = 0;
 const BNB = 1;
+const SLOTS = [Cherry, Dollar, Heart, Seven, Spade, Tomato]
 const getCryptoName = (crypto) => {
   let name = ''
   switch(crypto) {
@@ -61,7 +66,26 @@ const getCryptoName = (crypto) => {
 }
 const winColor = '#3bc216'
 const failedColor = '#f02000'
+
+const GradientCircularProgress = () => {
+  return (
+    <Box sx={{marginLeft : '40%'}}>
+      <svg width={0} height={0}>
+        <defs>
+          <linearGradient id="my_gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#e01cd5" />
+            <stop offset="100%" stopColor="#1CB5E0" />
+          </linearGradient>
+        </defs>
+      </svg>
+      <CircularProgress sx={{ 'svg circle': { stroke: 'url(#my_gradient)' } }} />
+    </Box>
+  );
+}
 const GameField = () => {
+  const [controller] = useVisionUIController();
+  const { isConnected } = controller;
+
   const [cashoutColor, setCashoutColor] = useState(winColor)
   const [type, setType] = useState(ETH)
   const [bet, setBet] = useState(false)
@@ -76,6 +100,36 @@ const GameField = () => {
   const [slots, setSlots] = useState([Seven,Seven,Seven,Seven,Seven])
   const [prevSlots, setPrevSlots] = useState([Seven,Seven,Seven,Seven,Seven])
   const dispatch = useDispatch();
+
+  const onSlot = (data) => {
+    console.log(data)
+    try{
+      const user_id = data['user_id']
+      if(user_id != userid) {
+        throw new Error("Socket data verification failed")
+      }
+      const slot_res = data['slot']
+      const slots_res = []
+      for(let i = 0; i < slot_res.length; i++) {
+        slots_res.push(SLOTS[slot_res[i]])
+      }
+      setSlots(slots_res)
+      slotRef.current.startAnimation()
+      setTimeout(() => {
+        setCashout(data['cashout'])
+        setBetting(false)
+      }, 3000)
+      fetchBalance()
+    }catch(e){
+      setBetting(false)
+      console.error('socket data error :', e.toString())
+    }
+  }
+
+  useEffect(() => {
+    socket.on('slot', onSlot)
+  }, [])  
+
   useEffect(() => {
     fetchBalance()
   }, [userid])
@@ -107,12 +161,18 @@ const GameField = () => {
   const funcSlot = async () => {
     setBetting(true)
     setPrevSlots(slots)
-    setSlots([Seven, Tomato, Cherry, Dollar, Seven])
-    slotRef.current.startAnimation()
-    setTimeout(() => {
-      setBetting(false)
-    }, 3000)
+    const price = isUSD ? ( type == 0 ? Price_ETH : Price_BNB ) : 1;
+    const betAmount = parseFloat((parseFloat(amount) / price).toFixed(4))
+    
+    const data = {
+      user_id : userid,
+      // hash,
+      cmd : 'bet',
+      bet_amount : betAmount,
+      coin_type: parseInt(type),
 
+    }
+    socket.emit('slot', data)
   }
 
   return (
@@ -164,38 +224,47 @@ const GameField = () => {
           flexDirection="column"
           sx={{ backgroundImage: `url(${BG})`, backgroundSize: "100% 100%", borderRadius: "18px" }}
         >
-          <VuiBox id="slot-box" display="flex" justifyContent="space-beetween" alignItems="center">
-            <SlotCounter
-              ref={slotRef}
-              startValueOnce = {true}
-              autoAnimationStart={false}
-              duration = {2.0}
-              speed = {10}
-              sx={{'& > span' : {margin : 'auto'}}}
-              startValue={[
-                <img className="item item-small" src={prevSlots[0]} alt="" />,
-                <img className="item item-small" src={prevSlots[1]} alt="" />,
-                <img className="item item-small" src={prevSlots[2]} alt="" />,
-                <img className="item item-small" src={prevSlots[3]} alt="" />,
-                <img className="item item-small" src={prevSlots[4]} alt="" />,
-              ]}
-              value={[
-                <img className="item item-small" src={slots[0]} alt="" />,
-                <img className="item item-small" src={slots[1]} alt="" />,
-                <img className="item item-small" src={slots[2]} alt="" />,
-                <img className="item item-small" src={slots[3]} alt="" />,
-                <img className="item item-small" src={slots[4]} alt="" />,
-              ]}
-              dummyCharacters={[
-                <img className="item item-small" src={Cherry} alt="" />,
-                <img className="item item-small" src={Dollar} alt="" />,
-                <img className="item item-small" src={Heart} alt="" />,
-                <img className="item item-small" src={Seven} alt="" />,
-                <img className="item item-small" src={Spade} alt="" />,
-                <img className="item item-small" src={Tomato} alt="" />,
-              ]}
-            />
-          </VuiBox>
+          {
+            !isConnected &&
+            <VuiBox display="block" alignItems="center">
+              <GradientCircularProgress />  
+            </VuiBox>
+          }
+          {
+            isConnected &&
+            <VuiBox id="slot-box" display="flex" justifyContent="space-beetween" alignItems="center">
+              <SlotCounter
+                ref={slotRef}
+                startValueOnce = {true}
+                autoAnimationStart={false}
+                duration = {2.0}
+                speed = {10}
+                sx={{'& > span' : {margin : 'auto'}}}
+                startValue={[
+                  <img className="item item-small" src={prevSlots[0]} alt="" />,
+                  <img className="item item-small" src={prevSlots[1]} alt="" />,
+                  <img className="item item-small" src={prevSlots[2]} alt="" />,
+                  <img className="item item-small" src={prevSlots[3]} alt="" />,
+                  <img className="item item-small" src={prevSlots[4]} alt="" />,
+                ]}
+                value={[
+                  <img className="item item-small" src={slots[0]} alt="" />,
+                  <img className="item item-small" src={slots[1]} alt="" />,
+                  <img className="item item-small" src={slots[2]} alt="" />,
+                  <img className="item item-small" src={slots[3]} alt="" />,
+                  <img className="item item-small" src={slots[4]} alt="" />,
+                ]}
+                dummyCharacters={[
+                  <img className="item item-small" src={Cherry} alt="" />,
+                  <img className="item item-small" src={Dollar} alt="" />,
+                  <img className="item item-small" src={Heart} alt="" />,
+                  <img className="item item-small" src={Seven} alt="" />,
+                  <img className="item item-small" src={Spade} alt="" />,
+                  <img className="item item-small" src={Tomato} alt="" />,
+                ]}
+              />
+            </VuiBox>
+          }
         </VuiBox>
         <VuiBox width="50%" m="auto" pb={1}>
           <VuiTypography variant="h4" fontWeight="bold" sx={{textAlign:'center', color:cashoutColor }}>
@@ -215,7 +284,7 @@ const GameField = () => {
                 '&:hover' : {backgroundColor : "#38c317"} 
               }} 
               onClick={funcSlot} 
-              disabled={amount <= 0 || betting}
+              disabled={amount <= 0 || betting || !isConnected}
             >
               Slot
             </VuiButton>
