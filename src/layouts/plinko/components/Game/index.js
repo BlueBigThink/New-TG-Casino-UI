@@ -5,11 +5,9 @@ import { PlinkoGameBody } from './components/GameBody';
 import { random } from '../../../../utils/random'
 import {
     Bodies,
-    Body,
     Composite,
     Engine,
     Events,
-    IEventCollision,
     Render,
     Runner,
     World
@@ -28,7 +26,6 @@ export const Game = forwardRef((props, ref) => {
     const { plinkoRunning } = useSelector(state => state.game);
     useImperativeHandle(ref, () => ({
         bet(betValue){
-            console.log("b============", betValue)
             addBall(betValue)
         }
     }));
@@ -91,12 +88,7 @@ export const Game = forwardRef((props, ref) => {
         const linePins = pinsConfig.startPins + l
         const lineWidth = linePins * pinsConfig.pinGap
         for (let i = 0; i < linePins; i++) {
-            const pinX =
-                worldWidth / 2 -
-                lineWidth / 2 +
-                i * pinsConfig.pinGap +
-                pinsConfig.pinGap / 2
-
+            const pinX = worldWidth / 2 - lineWidth / 2 + i * pinsConfig.pinGap + pinsConfig.pinGap / 2
             const pinY = worldWidth / lines + l * pinsConfig.pinGap + pinsConfig.pinGap
 
             const pin = Bodies.circle(pinX, pinY, pinsConfig.pinSize, {
@@ -126,28 +118,19 @@ export const Game = forwardRef((props, ref) => {
             // ballSound.currentTime = 0
             // ballSound.play()
 
-            const minBallX =
-                worldWidth / 2 - pinsConfig.pinSize * 3 + pinsConfig.pinGap
-            const maxBallX =
-                worldWidth / 2 -
-                pinsConfig.pinSize * 3 -
-                pinsConfig.pinGap +
-                pinsConfig.pinGap / 2
+            const minBallX = worldWidth / 2 - pinsConfig.pinSize * 3 + pinsConfig.pinGap
+            const maxBallX = worldWidth / 2 - pinsConfig.pinSize * 3 - pinsConfig.pinGap + pinsConfig.pinGap / 2
 
             const ballX = random(minBallX, maxBallX)
             const ballColor = ballValue <= 0 ? colors.text : colors.purple
             const ball = Bodies.circle(ballX, 20, ballConfig.ballSize, {
                 restitution: 1,
-                friction: 0.6,
+                friction: 0.1,
                 label: `ball-${ballValue}`,
                 id: new Date().getTime(),
                 frictionAir: 0.05,
-                collisionFilter: {
-                    group: -1
-                },
-                render: {
-                    fillStyle: ballColor
-                },
+                collisionFilter: { group: -1 },
+                render: { fillStyle: ballColor },
                 isStatic: false
             })
             Composite.add(engine.world, ball)
@@ -188,9 +171,9 @@ export const Game = forwardRef((props, ref) => {
     const multipliersBodies = [] //Body[]
     let lastMultiplierX = worldWidth / 2 - (pinsConfig.pinGap / 2) * lines - pinsConfig.pinGap
     multipliers.forEach(multiplier => {
-        const blockSize = 20 // height and width
+        const blockSize = pinsConfig.pinGap // height and width
         const multiplierBody = Bodies.rectangle(
-            lastMultiplierX + 20,
+            lastMultiplierX + blockSize,
             worldWidth / lines + lines * pinsConfig.pinGap + pinsConfig.pinGap,
             blockSize,
             blockSize,
@@ -199,8 +182,8 @@ export const Game = forwardRef((props, ref) => {
                 isStatic: true,
                 render: {
                     sprite: {
-                        xScale: 1,
-                        yScale: 1,
+                        xScale: 0.75,
+                        yScale: 0.75,
                         texture: multiplier.img
                     }
                 }

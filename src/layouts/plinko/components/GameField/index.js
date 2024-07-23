@@ -34,7 +34,7 @@ import { SiBinance } from "react-icons/si";
 import { setBalance } from "../../../../slices/user.slice";
 import callAPI from "../../../../api/index";
 import { CASINO_SERVER } from "../../../../variables/url";
-import BG from '../../../../assets/images/slot/bg.png'
+import balancePng from "assets/images/billing-background-balance.png";
 
 import { Game } from '../Game';
 import {socket} from "../../../../socket";
@@ -129,7 +129,7 @@ const GameField = () => {
   }
 
   return (
-    <Card sx={{ padding: "30px", mt:"10px" }}>
+    <Card sx={{ padding: "15px", mt:"10px" }}>
       <VuiBox mt={0.25} width="100%">
         <VuiTypography variant="button" fontWeight="regular" color="white">
           HouseCutFee : 5%
@@ -172,10 +172,9 @@ const GameField = () => {
       <VuiBox display="flex" flexDirection="column" mt={2}>
         <VuiBox
           mb="10px"
-          p="20px"
           display="flex"
           flexDirection="column"
-          sx={{ backgroundImage: `url(${BG})`, backgroundSize: "100% 100%", borderRadius: "18px" }}
+          sx={{ backgroundImage: `url(${balancePng})`, backgroundSize: "100% 100%", borderRadius: "18px" }}
         >
           {/* {
             !isConnected &&
@@ -185,7 +184,7 @@ const GameField = () => {
           } */}
           {/* {
             isConnected && */}
-            <VuiBox id="slot-box" display="flex" justifyContent="space-beetween" alignItems="center">
+            <VuiBox display="flex" justifyContent="space-beetween" alignItems="center" m="auto">
               <Game ref={gameRef}/>
             </VuiBox>
           {/* } */}

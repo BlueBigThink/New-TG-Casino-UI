@@ -20,8 +20,6 @@ import multiplierGood from '../../../../../assets/plinko/sounds/multiplier-good.
 import multiplierLow from '../../../../../assets/plinko/sounds/multiplier-low.wav'
 import multiplierRegular from '../../../../../assets/plinko/sounds/multiplier-regular.wav'
 
-import { LinesType, MultiplierType, MultiplierValues } from '../@types'
-
 const multiplierSounds = {
   110: multiplierBest,
   88: multiplierBest,
