@@ -4,6 +4,7 @@ import Dashboard from "layouts/dashboard";
 // import Profile from "layouts/profile";
 import Coinflip from "layouts/coinflip";
 import Slot from "layouts/slot";
+import Plinko from "layouts/plinko";
 import Enter from "layouts/enter";
 // import { BsFillPersonFill } from "react-icons/bs";
 // import { BsCreditCardFill } from "react-icons/bs";
@@ -74,6 +75,15 @@ const routes = [
     route: "/slot",
     icon: <IoHome size="15px" color="inherit" />,
     component: Slot,
+    noCollapse: true,
+  },
+  {
+    type: "component",
+    name: "Plinko",
+    key: "plinko",
+    route: "/plinko",
+    icon: <IoHome size="15px" color="inherit" />,
+    component: Plinko,
     noCollapse: true,
   },
 ];

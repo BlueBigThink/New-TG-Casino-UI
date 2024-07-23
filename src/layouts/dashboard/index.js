@@ -79,10 +79,10 @@ function Dashboard() {
               </Link>
             </Grid>
             <Grid item xs={12}>
-              <Link to="/hilo">
+              <Link to="/plinko">
                 <MiniStatisticsCard
                   title={{ text: "UniChat", fontWeight: "regular" }}
-                  count="HiLo"
+                  count="Plinko"
                   // percentage={{ color: "success", text: "+55%" }}
                   icon={{ color: "info", component: <HiMiniArrowsUpDown  size="22px" color="white" /> }}
                 />

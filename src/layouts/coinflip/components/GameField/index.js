@@ -313,7 +313,16 @@ const GameField = () => {
           }
           {!bet &&
           <Stack direction="row" spacing="10px" m="auto" >
-            <VuiButton variant="contained" sx={{width:"100%", fontSize: "16px", background:'#38c317', '&:disabled' : {background : "#385317"}}} onClick={funcBet} disabled={amount <= 0 || betting}>
+            <VuiButton variant="contained" 
+              sx={{
+                width:"100%", 
+                fontSize: "16px", 
+                background:'#38c317', 
+                '&:disabled' : {background : "#385317"},
+                '&:hover' : {backgroundColor : "#38c317"}
+              }}
+              onClick={funcBet} 
+              disabled={amount <= 0 || betting}>
               Bet
             </VuiButton>
           </Stack>
