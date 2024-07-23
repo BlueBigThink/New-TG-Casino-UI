@@ -23,7 +23,7 @@ const WelcomeMark = () => {
       <VuiBox height="100%" display="flex" flexDirection="column" justifyContent="space-between">
         <VuiBox>
           <VuiTypography color="white" variant="button" fontWeight="regular" mb="12px">
-            Welcome To UniChat Lab,
+            Welcome To UniChat,
           </VuiTypography>
           <VuiTypography color="white" variant="h3" fontWeight="bold">
             {name} 

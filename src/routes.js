@@ -1,12 +1,12 @@
 import Dashboard from "layouts/dashboard";
 // import Tables from "layouts/tables";
 // import Billing from "layouts/billing";
-// import Profile from "layouts/profile";
+import Profile from "layouts/profile";
 import Coinflip from "layouts/coinflip";
 import Slot from "layouts/slot";
 import Plinko from "layouts/plinko";
 import Enter from "layouts/enter";
-// import { BsFillPersonFill } from "react-icons/bs";
+import { BsFillPersonFill } from "react-icons/bs";
 // import { BsCreditCardFill } from "react-icons/bs";
 // import { IoWallet } from "react-icons/io5";
 // import { IoStatsChart } from "react-icons/io5";
@@ -50,15 +50,15 @@ const routes = [
   //   noCollapse: true,
   // },
   // { type: "title", title: "Account Pages", key: "account-pages" },
-  // {
-  //   type: "collapse",
-  //   name: "Profile",
-  //   key: "profile",
-  //   route: "/profile",
-  //   icon: <BsFillPersonFill size="15px" color="inherit" />,
-  //   component: Profile,
-  //   noCollapse: true,
-  // },
+  {
+    type: "collapse",
+    name: "Profile",
+    key: "profile",
+    route: "/profile",
+    icon: <BsFillPersonFill size="15px" color="inherit" />,
+    component: Profile,
+    noCollapse: true,
+  },
   {
     type: "component",
     name: "Coinflip",
