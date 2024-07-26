@@ -15,6 +15,7 @@ import {
 import balancePng from "assets/images/billing-background-balance.png";
 import Heads from "assets/images/heads.webp";
 import Tails from "assets/images/tails.webp";
+import Win from '../../../../assets/images/win.webp'
 
 import palette from "assets/theme/base/colors";
 import CircularProgress from '@mui/material/CircularProgress';
@@ -28,6 +29,7 @@ import VuiInput from "components/VuiInput";
 import GradientBorder from "examples/GradientBorder";
 import borders from "assets/theme/base/borders";
 import radialGradient from "assets/theme/functions/radialGradient";
+import Dialog from '@mui/material/Dialog';
 
 // React icons
 import { FaEthereum } from "react-icons/fa";
@@ -77,6 +79,7 @@ const GradientCircularProgress = () => {
 const GameField = () => {
   const [controller] = useVisionUIController();
   const { isConnected } = controller;
+  const [open, setOpen] = useState(false);
 
   const [cashoutColor, setCashoutColor] = useState(winColor)
   const [spin, setSpin] = useState("");
@@ -96,7 +99,13 @@ const GameField = () => {
   const {Price_ETH, Price_BNB} = useSelector((state) => state.price)
   const [provables, setProbables] = useState([])
   const dispatch = useDispatch();
-  
+  const showWin = () => {
+    setOpen(true);
+  };
+
+  const closeWin = () => {
+    setOpen(false);
+  };
   const getOtherSpin = (spin_type) => {
     if(spin_type == "spin-heads") {
       return "spin-heads-1"
@@ -262,9 +271,21 @@ const GameField = () => {
       // hash,
     }
     socket.emit('coinflip', data)  
+    showWin()
     await fetchBalance()
   }
   return (
+    <>
+      <Dialog
+        id="win-dialog"
+        open={open}
+        onClose={closeWin}
+        sx={{ '& div.MuiPaper-root' : { background : "transparent" } }}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <img src={Win}/>
+    </Dialog>
     <Card sx={{ padding: "30px", mt:"10px" }}>
       <VuiBox mt={0.25} width="100%">
         <VuiTypography variant="button" fontWeight="regular" color="white">
@@ -439,6 +460,7 @@ const GameField = () => {
         })}
       </VuiBox>
     </Card>
+  </>
   );
 };
 

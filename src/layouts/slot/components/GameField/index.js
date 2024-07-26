@@ -23,7 +23,7 @@ import GradientBorder from "examples/GradientBorder";
 import borders from "assets/theme/base/borders";
 import radialGradient from "assets/theme/functions/radialGradient";
 import SlotCounter from 'react-slot-counter';
-
+import Dialog from '@mui/material/Dialog';
 import CircularProgress from '@mui/material/CircularProgress';
 
 import { useVisionUIController } from "context";
@@ -35,6 +35,7 @@ import Seven from '../../../../assets/images/slot/seven.png'
 import Spade from '../../../../assets/images/slot/spade.png'
 import Tomato from '../../../../assets/images/slot/tomato.png'
 import BG from '../../../../assets/images/slot/bg.png'
+import Win from '../../../../assets/images/win.webp'
 // React icons
 import { FaEthereum } from "react-icons/fa";
 import { SiBinance } from "react-icons/si";
@@ -81,6 +82,7 @@ const GradientCircularProgress = () => {
 const GameField = () => {
   const [controller] = useVisionUIController();
   const { isConnected } = controller;
+  const [open, setOpen] = useState(false);
 
   const [cashoutColor, setCashoutColor] = useState(winColor)
   const [type, setType] = useState(ETH)
@@ -97,6 +99,13 @@ const GameField = () => {
   const [prevSlots, setPrevSlots] = useState([Seven,Seven,Seven,Seven,Seven])
   const dispatch = useDispatch();
 
+  const showWin = () => {
+    setOpen(true);
+  };
+
+  const closeWin = () => {
+    setOpen(false);
+  };
   const onSlot = (data) => {
     console.log(data)
     try{
@@ -113,6 +122,12 @@ const GameField = () => {
       slotRef.current.startAnimation()
       setTimeout(() => {
         setCashout(data['cashout'])
+        if(data['cashout'] > 2) {
+          setCashoutColor(winColor)
+          showWin()
+        } else {
+          setCashoutColor(failedColor)
+        }
         setBetting(false)
       }, 3000)
       fetchBalance()
@@ -172,145 +187,157 @@ const GameField = () => {
   }
 
   return (
-    <Card sx={{ padding: "30px", mt:"10px" }}>
-      <VuiBox mt={0.25} width="100%">
-        <VuiTypography variant="button" fontWeight="regular" color="white">
-          HouseCutFee : 5%
-        </VuiTypography>
-      </VuiBox>
-      <VuiBox display="flex" mb="14px">
-        <VuiBox mt={0.25} width="70%">
-          <VuiTypography variant="button" fontWeight="regular" color="warning">
-            Balance : {isUSD ? '$' : getCryptoName(type)} {getVisibleBalance()}
+    <>
+      <Dialog
+        id="win-dialog"
+        open={open}
+        onClose={closeWin}
+        sx={{ '& div.MuiPaper-root' : { background : "transparent" } }}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <img src={Win}/>
+      </Dialog>
+      <Card sx={{ padding: "30px", mt:"10px" }}>
+        <VuiBox mt={0.25} width="100%">
+          <VuiTypography variant="button" fontWeight="regular" color="white">
+            HouseCutFee : 5%
           </VuiTypography>
         </VuiBox>
-        <VuiBox display="flex" mt={0.25} width="30%">
-          <VuiBox>
-            <VuiSwitch
-              sx={{ background: "#1B1F3D", color: "#fff" }}
-              color="warning"
-              checked={isUSD}
-              onChange={() => seIsUSD(!isUSD)}
-            />
-          </VuiBox>
-          <VuiBox ml={2}>
-            <VuiTypography variant="button" fontWeight="regular" color="text">
-              USD
+        <VuiBox display="flex" mb="14px">
+          <VuiBox mt={0.25} width="70%">
+            <VuiTypography variant="button" fontWeight="regular" color="warning">
+              Balance : {isUSD ? '$' : getCryptoName(type)} {getVisibleBalance()}
             </VuiTypography>
           </VuiBox>
-        </VuiBox>
-      </VuiBox>
-      <VuiBox>
-        <Tabs
-          orientation={tabsOrientation}
-          value={type}
-          onChange={handleKindChange}
-          sx={{ background: "transparent", display: "flex", width: '100%', margin:"auto"}}
-        >
-          <Tab label="ETH" icon={<FaEthereum color="white" size="20px" />} disabled={bet} sx={{minWidth: "50%"}}/>
-          <Tab label="BNB" icon={<SiBinance color="white" size="20px" />} disabled={bet} sx={{minWidth: "50%"}}/>
-        </Tabs>
-      </VuiBox>
-
-      <VuiBox display="flex" flexDirection="column" mt={2}>
-        <VuiBox
-          mb="10px"
-          p="20px"
-          display="flex"
-          flexDirection="column"
-          sx={{ backgroundImage: `url(${BG})`, backgroundSize: "100% 100%", borderRadius: "18px" }}
-        >
-          {
-            !isConnected &&
-            <VuiBox display="block" alignItems="center">
-              <GradientCircularProgress />  
-            </VuiBox>
-          }
-          {
-            isConnected &&
-            <VuiBox id="slot-box" display="flex" justifyContent="space-beetween" alignItems="center">
-              <SlotCounter
-                ref={slotRef}
-                startValueOnce = {true}
-                autoAnimationStart={false}
-                duration = {2.0}
-                speed = {10}
-                sx={{'& > span' : {margin : 'auto'}}}
-                startValue={[
-                  <img className="item item-small" src={prevSlots[0]} alt="" />,
-                  <img className="item item-small" src={prevSlots[1]} alt="" />,
-                  <img className="item item-small" src={prevSlots[2]} alt="" />,
-                  <img className="item item-small" src={prevSlots[3]} alt="" />,
-                  <img className="item item-small" src={prevSlots[4]} alt="" />,
-                ]}
-                value={[
-                  <img className="item item-small" src={slots[0]} alt="" />,
-                  <img className="item item-small" src={slots[1]} alt="" />,
-                  <img className="item item-small" src={slots[2]} alt="" />,
-                  <img className="item item-small" src={slots[3]} alt="" />,
-                  <img className="item item-small" src={slots[4]} alt="" />,
-                ]}
-                dummyCharacters={[
-                  <img className="item item-small" src={Cherry} alt="" />,
-                  <img className="item item-small" src={Dollar} alt="" />,
-                  <img className="item item-small" src={Heart} alt="" />,
-                  <img className="item item-small" src={Seven} alt="" />,
-                  <img className="item item-small" src={Spade} alt="" />,
-                  <img className="item item-small" src={Tomato} alt="" />,
-                ]}
+          <VuiBox display="flex" mt={0.25} width="30%">
+            <VuiBox>
+              <VuiSwitch
+                sx={{ background: "#1B1F3D", color: "#fff" }}
+                color="warning"
+                checked={isUSD}
+                onChange={() => seIsUSD(!isUSD)}
               />
             </VuiBox>
-          }
-        </VuiBox>
-        <VuiBox width="50%" m="auto" pb={1}>
-          <VuiTypography variant="h4" fontWeight="bold" sx={{textAlign:'center', color:cashoutColor }}>
-            x{cashout.toFixed(2)}
-          </VuiTypography>
-        </VuiBox>
-        <VuiBox display="block" justifyContent="space-beetween" alignItems="center" mb={1}>
-          <Stack direction="row" spacing="10px" m="auto" >
-            <VuiButton 
-              variant="contained" 
-              className="button-slot" 
-              sx={{
-                width:"100%", 
-                fontSize: "16px", 
-                backgroundColor:'#38c317', 
-                '&:disabled' : {backgroundColor : "#385317"}, 
-                '&:hover' : {backgroundColor : "#38c317"} 
-              }} 
-              onClick={funcSlot} 
-              disabled={amount <= 0 || betting || !isConnected}
-            >
-              Slot
-            </VuiButton>
-          </Stack>
-          <Stack direction="row" spacing="10px" m="auto" mt="10px">
-            <VuiBox mb={2} sx={{width:"50%"}}>
-              <GradientBorder
-                minWidth="100%"
-                padding="1px"
-                borderRadius={borders.borderRadius.lg}
-                backgroundImage={radialGradient(
-                  palette.gradients.borderLight.main,
-                  palette.gradients.borderLight.state,
-                  palette.gradients.borderLight.angle
-                )}
-              >
-                <VuiInput type="number" value={amount} disabled={bet} onChange={(e) => {setAmount(e.target.value)}} fontWeight="500"/>
-              </GradientBorder>
+            <VuiBox ml={2}>
+              <VuiTypography variant="button" fontWeight="regular" color="text">
+                USD
+              </VuiTypography>
             </VuiBox>
-            <VuiButton variant="contained" color="secondary" sx={{width:"25%", fontSize:"14px" }} disabled={bet} onClick={() => funcBetAmount(0.5)}>
-              /2
-            </VuiButton>
-            <VuiButton variant="contained" color="secondary" sx={{width:"25%", fontSize:"14px"}} disabled={bet} onClick={() => funcBetAmount(2)}>
-              x2
-            </VuiButton>
-          </Stack>
-
+          </VuiBox>
         </VuiBox>
-      </VuiBox>
-    </Card>
+        <VuiBox>
+          <Tabs
+            orientation={tabsOrientation}
+            value={type}
+            onChange={handleKindChange}
+            sx={{ background: "transparent", display: "flex", width: '100%', margin:"auto"}}
+          >
+            <Tab label="ETH" icon={<FaEthereum color="white" size="20px" />} disabled={bet} sx={{minWidth: "50%"}}/>
+            <Tab label="BNB" icon={<SiBinance color="white" size="20px" />} disabled={bet} sx={{minWidth: "50%"}}/>
+          </Tabs>
+        </VuiBox>
+
+        <VuiBox display="flex" flexDirection="column" mt={2}>
+          <VuiBox
+            mb="10px"
+            p="20px"
+            display="flex"
+            flexDirection="column"
+            sx={{ backgroundImage: `url(${BG})`, backgroundSize: "100% 100%", borderRadius: "18px" }}
+          >
+            {
+              !isConnected &&
+              <VuiBox display="block" alignItems="center">
+                <GradientCircularProgress />  
+              </VuiBox>
+            }
+            {
+              isConnected &&
+              <VuiBox id="slot-box" display="flex" justifyContent="space-beetween" alignItems="center">
+                <SlotCounter
+                  ref={slotRef}
+                  startValueOnce = {true}
+                  autoAnimationStart={false}
+                  duration = {2.0}
+                  speed = {10}
+                  sx={{'& > span' : {margin : 'auto'}}}
+                  startValue={[
+                    <img className="item item-small" src={prevSlots[0]} alt="" />,
+                    <img className="item item-small" src={prevSlots[1]} alt="" />,
+                    <img className="item item-small" src={prevSlots[2]} alt="" />,
+                    <img className="item item-small" src={prevSlots[3]} alt="" />,
+                    <img className="item item-small" src={prevSlots[4]} alt="" />,
+                  ]}
+                  value={[
+                    <img className="item item-small" src={slots[0]} alt="" />,
+                    <img className="item item-small" src={slots[1]} alt="" />,
+                    <img className="item item-small" src={slots[2]} alt="" />,
+                    <img className="item item-small" src={slots[3]} alt="" />,
+                    <img className="item item-small" src={slots[4]} alt="" />,
+                  ]}
+                  dummyCharacters={[
+                    <img className="item item-small" src={Cherry} alt="" />,
+                    <img className="item item-small" src={Dollar} alt="" />,
+                    <img className="item item-small" src={Heart} alt="" />,
+                    <img className="item item-small" src={Seven} alt="" />,
+                    <img className="item item-small" src={Spade} alt="" />,
+                    <img className="item item-small" src={Tomato} alt="" />,
+                  ]}
+                />
+              </VuiBox>
+            }
+          </VuiBox>
+          <VuiBox width="50%" m="auto" pb={1}>
+            <VuiTypography variant="h4" fontWeight="bold" sx={{textAlign:'center', color:cashoutColor }}>
+              x{cashout.toFixed(2)}
+            </VuiTypography>
+          </VuiBox>
+          <VuiBox display="block" justifyContent="space-beetween" alignItems="center" mb={1}>
+            <Stack direction="row" spacing="10px" m="auto" >
+              <VuiButton 
+                variant="contained" 
+                className="button-slot" 
+                sx={{
+                  width:"100%", 
+                  fontSize: "16px", 
+                  backgroundColor:'#38c317', 
+                  '&:disabled' : {backgroundColor : "#385317"}, 
+                  '&:hover' : {backgroundColor : "#38c317"} 
+                }} 
+                onClick={funcSlot} 
+                disabled={amount <= 0 || betting || !isConnected}
+              >
+                Slot
+              </VuiButton>
+            </Stack>
+            <Stack direction="row" spacing="10px" m="auto" mt="10px">
+              <VuiBox mb={2} sx={{width:"50%"}}>
+                <GradientBorder
+                  minWidth="100%"
+                  padding="1px"
+                  borderRadius={borders.borderRadius.lg}
+                  backgroundImage={radialGradient(
+                    palette.gradients.borderLight.main,
+                    palette.gradients.borderLight.state,
+                    palette.gradients.borderLight.angle
+                  )}
+                >
+                  <VuiInput type="number" value={amount} disabled={bet} onChange={(e) => {setAmount(e.target.value)}} fontWeight="500"/>
+                </GradientBorder>
+              </VuiBox>
+              <VuiButton variant="contained" color="secondary" sx={{width:"25%", fontSize:"14px" }} disabled={bet} onClick={() => funcBetAmount(0.5)}>
+                /2
+              </VuiButton>
+              <VuiButton variant="contained" color="secondary" sx={{width:"25%", fontSize:"14px"}} disabled={bet} onClick={() => funcBetAmount(2)}>
+                x2
+              </VuiButton>
+            </Stack>
+
+          </VuiBox>
+        </VuiBox>
+      </Card>
+    </>
   );
 };
 
