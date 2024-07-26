@@ -4,16 +4,12 @@ import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
 // @mui components
 import { 
-  AppBar,
   Card, 
   Stack,
   Tab,
   Tabs,
   Box
 } from "@mui/material";
-
-// Vision UI Dashboard assets
-import balancePng from "assets/images/billing-background-balance.png";
 
 import palette from "assets/theme/base/colors";
 

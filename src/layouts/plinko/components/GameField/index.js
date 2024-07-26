@@ -30,6 +30,9 @@ import { useVisionUIController } from "context";
 // React icons
 import { FaEthereum } from "react-icons/fa";
 import { SiBinance } from "react-icons/si";
+import { TbViewportWide } from "react-icons/tb";
+import { TbViewportNarrow } from "react-icons/tb";
+import { LuRectangleVertical } from "react-icons/lu";
 
 import { setBalance } from "../../../../slices/user.slice";
 import callAPI from "../../../../api/index";
@@ -75,26 +78,48 @@ const GameField = () => {
   const { isConnected } = controller;
 
   const [type, setType] = useState(ETH)
+  const [level, setLevel] = useState(0)
   const [bet, setBet] = useState(false)
-  const [betting, setBetting] = useState(false)
   const [amount, setAmount] = useState(0.5)
   const [isUSD, setIsUSD] = useState(true);
   const [tabsOrientation, setTabsOrientation] = useState("horizontal");
-  const {userid, balance} = useSelector((state) => state.user)
-  const {Price_ETH, Price_BNB} = useSelector((state) => state.price)
+  const {userid, balance} = useSelector((state) => state.user);
+  const {Price_ETH, Price_BNB} = useSelector((state) => state.price);
+  const { 
+    plinkoRunning, 
+    plinkoHistory 
+  } = useSelector((state) => state.game);
   const dispatch = useDispatch();
   const gameRef = useRef();
-  // const onSlot = (data) => {
-  //   console.log(data)
-  //   try{
-  //   }catch(e){
-  //     console.error('socket data error :', e.toString())
-  //   }
-  // }
+  const getHistoryColor = (value) => {
+    let colorValue = '#333';
+    if(value >= 1){
+      colorValue = '#38c317';
+    }
+    if(value >= 10){
+      colorValue = '#c3c317';
+    }
+    return colorValue;
+  }
+  const onPlinko = (data) => {
+    try{
+      const user_id = data['user_id']
+      if(user_id != userid) {
+        throw new Error("Socket data verification failed")
+      }
+      dispatch(setBalance({
+        ETH: data['ETH'],
+        BNB: data['BNB'],
+      }))
 
-  // useEffect(() => {
-  //   socket.on('slot', onSlot)
-  // }, [])  
+    }catch(e){
+      console.error('socket data error :', e.toString())
+    }
+  }
+
+  useEffect(() => {
+    socket.on('plinko', onPlinko)
+  }, [])  
 
   useEffect(() => {
     fetchBalance()
@@ -123,11 +148,45 @@ const GameField = () => {
   const handleKindChange = (event, newValue) => {
     setType(newValue);
     setAmount(0.0)
-  };
-  const onBet = () => {
-    gameRef.current.bet(55)
   }
-
+  const handleLevelChange = (event, newValue) => {
+    setLevel(newValue)
+  }
+  const onBet = () => {
+    if (plinkoRunning > 15) return
+    const price = isUSD ? ( type == 0 ? Price_ETH : Price_BNB ) : 1;
+    const betAmount = parseFloat((parseFloat(amount) / price).toFixed(4))
+    gameRef.current.bet(type, betAmount);
+    const newBalance = Object.assign({}, balance);
+    if(type == 0) {
+      newBalance.ETH = balance.ETH - betAmount
+    } else if(type == 1) {
+      newBalance.BNB = balance.BNB - betAmount
+    }
+    dispatch(setBalance(newBalance))
+  }
+  const startBall = (coinType, betAmount) => {
+    const data = {
+      user_id : userid,
+      // hash,
+      cmd : 'start',
+      bet_amount : betAmount,
+      coin_type: coinType,
+      rate : 0,
+    }
+    socket.emit('plinko', data)
+  }
+  const endBall = (coinType, betAmount, rate) => {
+    const data = {
+      user_id : userid,
+      // hash,
+      cmd : 'end',
+      bet_amount : betAmount,
+      coin_type: coinType,
+      rate : rate,
+    }
+    socket.emit('plinko', data)
+  }
   return (
     <Card sx={{ padding: "15px", mt:"10px" }}>
       <VuiBox mt={0.25} width="100%">
@@ -176,26 +235,80 @@ const GameField = () => {
           flexDirection="column"
           sx={{ backgroundImage: `url(${balancePng})`, backgroundSize: "100% 100%", borderRadius: "18px" }}
         >
-          {/* {
+          <VuiBox id="plinko-history" display="flex" sx={{height:"40px", justifyContent:"right"}}>
+            {plinkoHistory && plinkoHistory.map((history, idx) => {
+              return <>
+                <VuiBox 
+                  key={idx}
+                  display="flex"
+                  alignItems="center"
+                  width='20%'
+                  height='35px'
+                  color='white'
+                  sx={{
+                    float:"right",
+                    marginLeft:'2px',
+                    justifyContent: 'center',
+                    textAlign:'center',
+                    border: '1px solid transparent', 
+                    background: getHistoryColor(history), 
+                    borderRadius : '3px',
+                    fontSize : '14px',
+                    '&:first-of-type' : {
+                      borderTopLeftRadius: plinkoHistory.length == 5 ? '18px' : '5px'
+                    },
+                    '&:last-child' : {
+                      borderTopRightRadius: '18px'
+                    }
+                  }}
+                >
+                  x{history}
+                </VuiBox>
+              </>
+            })}
+          </VuiBox>
+          {
             !isConnected &&
             <VuiBox display="block" alignItems="center">
               <GradientCircularProgress />  
             </VuiBox>
-          } */}
-          {/* {
-            isConnected && */}
-            <VuiBox display="flex" justifyContent="space-beetween" alignItems="center" m="auto">
-              <Game ref={gameRef}/>
+          }
+          {
+            isConnected &&
+            <VuiBox display="flex" justifyContent="space-beetween" alignItems="center" m="auto" mb='20px'>
+              <Game ref={gameRef} level={level} startfunc={startBall} endfunc={endBall}/>
             </VuiBox>
-          {/* } */}
+          }
         </VuiBox>
       </VuiBox>
+
+      <VuiBox mb={1}>
+        <Tabs
+          orientation={tabsOrientation}
+          value={level}
+          onChange={handleLevelChange}
+          sx={{ 
+            background: "transparent", 
+            display: "flex", 
+            width: '100%', 
+            margin:"auto",
+            '& > div > span' : {
+              borderRadius : '5px',
+              background: level == 0 ? "grey" : ( level == 1 ? "green" : "purple")
+            }
+          }}
+        >
+          <Tab label="LOW" icon={<TbViewportNarrow color="white" size="20px" />} disabled={plinkoRunning > 0} sx={{minWidth: "32%", border:'1px solid grey', marginRight:'2px', borderRadius:'5px'}}/>
+          <Tab label="MEDIUM" icon={<LuRectangleVertical color="white" size="20px" />} disabled={plinkoRunning > 0} sx={{minWidth: "32%", border:'1px solid grey', marginRight:'2px', borderRadius:'5px'}}/>
+          <Tab label="HIGH" icon={<TbViewportWide color="white" size="20px" />} disabled={plinkoRunning > 0} sx={{minWidth: "32%", border:'1px solid grey', borderRadius:'5px'}}/>
+        </Tabs>
+      </VuiBox>
+
       <VuiBox display="block" justifyContent="space-beetween" alignItems="center" mb={1}>
         <Stack direction="row" spacing="10px" m="auto" >
           <VuiButton 
             variant="contained" 
             className="button-slot" 
-            color="sucess"
             sx={{
               width:"100%", 
               fontSize: "16px", 
