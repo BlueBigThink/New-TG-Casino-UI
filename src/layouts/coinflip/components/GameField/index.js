@@ -253,17 +253,15 @@ const GameField = () => {
   const funcCashout = async () => {
     //balance will increase
     setBet(false)
-    const config = {
-      method: 'POST',
-      url : `${CASINO_SERVER}/cashout_coinflip`,
-      data: {
-        // hash: hash
-        UserID: userid,
-        server_hash: serverHash,
-      }          
+    const data = {
+      cmd : 'cashout',
+      user_id : userid,
+      server_hash : serverHash,
+      coin_type: type,
+      bet_amount : 0,
+      // hash,
     }
-    const endRes = await callAPI(config);
-    console.log(endRes)
+    socket.emit('coinflip', data)  
     await fetchBalance()
   }
   return (
