@@ -7,7 +7,8 @@ import {
   Card, 
   Stack,
   Tab,
-  Tabs
+  Tabs,
+  Box
 } from "@mui/material";
 
 // Vision UI Dashboard assets
@@ -16,6 +17,7 @@ import Heads from "assets/images/heads.webp";
 import Tails from "assets/images/tails.webp";
 
 import palette from "assets/theme/base/colors";
+import CircularProgress from '@mui/material/CircularProgress';
 
 // Vision UI Dashboard components
 import VuiBox from "components/VuiBox";
@@ -30,11 +32,12 @@ import radialGradient from "assets/theme/functions/radialGradient";
 // React icons
 import { FaEthereum } from "react-icons/fa";
 import { SiBinance } from "react-icons/si";
-import {Box} from "@mui/material";
 
 import { setBalance } from "../../../../slices/user.slice";
 import callAPI from "../../../../api/index";
 import { CASINO_SERVER } from "../../../../variables/url";
+import { useVisionUIController } from "context";
+import {socket} from "../../../../socket";
 
 import './index.css'
 
@@ -54,7 +57,27 @@ const getCryptoName = (crypto) => {
 }
 const winColor = '#3bc216'
 const failedColor = '#f02000'
+
+const GradientCircularProgress = () => {
+  return (
+    <Box sx={{marginLeft : '40%'}}>
+      <svg width={0} height={0}>
+        <defs>
+          <linearGradient id="my_gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#e01cd5" />
+            <stop offset="100%" stopColor="#1CB5E0" />
+          </linearGradient>
+        </defs>
+      </svg>
+      <CircularProgress sx={{ 'svg circle': { stroke: 'url(#my_gradient)' } }} />
+    </Box>
+  );
+}
+
 const GameField = () => {
+  const [controller] = useVisionUIController();
+  const { isConnected } = controller;
+
   const [cashoutColor, setCashoutColor] = useState(winColor)
   const [spin, setSpin] = useState("");
   const [type, setType] = useState(ETH)
@@ -73,9 +96,7 @@ const GameField = () => {
   const {Price_ETH, Price_BNB} = useSelector((state) => state.price)
   const [provables, setProbables] = useState([])
   const dispatch = useDispatch();
-  useEffect(() => {
-    fetchBalance()
-  }, [userid])
+  
   const getOtherSpin = (spin_type) => {
     if(spin_type == "spin-heads") {
       return "spin-heads-1"
@@ -86,7 +107,84 @@ const GameField = () => {
     } else if(spin_type == "spin-tails") {
       return "spin-tails-1"
     }
+  }  
+  const onCoinFlip = (data) => {
+    try{
+      const user_id = data['user_id']
+      if(user_id != userid) {
+        throw new Error("Socket data verification failed")
+      }
+      const cmd = data['cmd']
+      if(cmd == 'betted'){
+          const s_hash = data['hash']
+          dispatch(setBalance({
+            ETH: data['ETH'],
+            BNB: data['BNB'],
+          }))
+          setBet(true)
+          setBetting(false)
+          setServerHash(s_hash)
+          setServerNextHash(s_hash)
+      } else if(cmd == 'predicted') {
+        if(data['status'] == -1) {
+          throw new Error("Not User")
+        }
+        if(data['status'] == -2) {
+          throw new Error("Token expired")
+        }
+        const element = document.getElementById('coin');
+
+        let coin_spin = ""
+        if (element) {
+          const styles = getComputedStyle(element);
+          coin_spin = styles.animation.toString().split(' ').pop()
+        }
+
+        const coinResult = data['result'];
+        const winning_rate = data['winning_rate'];
+        const win = data['win'];
+        const color = win ? winColor : failedColor
+    
+        let spin_type = coinResult == 1 ? "spin-heads" : "spin-tails"
+        if(spin_type == coin_spin) {
+          spin_type = getOtherSpin(spin_type)
+        }
+    
+        const seed = data['seed'];
+        const nonce = data['nonce'];
+        const prov = {
+          hash:serverHash,
+          seed,nonce
+        }
+    
+        setSpin(spin_type);
+        setTimeout(() => {
+          setPlaying(false)
+          setCashoutColor(color)
+          setCashout(winning_rate)
+          setProbables([prov,...provables])
+          if(!win) {
+            setBet(false)
+          }
+        }, 3000)
+        const next_hash = data['next_hash'];
+        setServerNextHash(next_hash)    
+      }
+
+    }catch(e){
+      console.error('socket data error :', e.toString())
+      setBet(false)
+      setBetting(false)
+    }
   }
+
+  useEffect(() => {
+    socket.on('coinflip', onCoinFlip)
+  }, [])
+
+  useEffect(() => {
+    fetchBalance()
+  }, [userid])
   const fetchBalance = async () => {
     const config = {
       method: 'POST',
@@ -122,28 +220,15 @@ const GameField = () => {
       const price = isUSD ? ( type == 0 ? Price_ETH : Price_BNB ) : 1;
       const betAmount = parseFloat((parseFloat(amount) / price).toFixed(4))
   
-      const config = {
-        method: 'POST',
-        url : `${CASINO_SERVER}/bet_coinflip`,
-        data: {
-          // hash: hash
-          UserID: userid,
-          coin_type: parseInt(type),
-          bet_amount: betAmount,
-        }          
+      const data = {
+        cmd : 'bet',
+        user_id : userid,
+        coin_type: parseInt(type),
+        bet_amount : betAmount,
+        server_hash : '',
+        // hash,
       }
-      const betRes = await callAPI(config)
-      const balance = {
-        "ETH" : betRes.ETH,
-        "BNB" : betRes.BNB,
-      }
-      setBet(true)
-      setBetting(false)
-      setServerHash(betRes.hash)
-      setServerNextHash(betRes.hash)
-      dispatch(setBalance(balance))
-  
-      console.log(betRes)
+      socket.emit('coinflip', data)
     } catch {
       setBet(false)
       setBetting(false)
@@ -153,53 +238,16 @@ const GameField = () => {
     setPrediction([...prediction, coin_side])
     setPlaying(true);
     setServerHash(serverNextHash)
-    const config = {
-      method: 'POST',
-      url : `${CASINO_SERVER}/pred_coinflip`,
-      data: {
-        // hash: hash
-        UserID: userid,
-        server_hash: serverNextHash,
-        coin: coin_side,
-      }          
+    const data = {
+      cmd : 'predict',
+      user_id : userid,
+      coin_type: parseInt(type),
+      bet_amount : 0,
+      server_hash : serverNextHash,
+      coin : coin_side,
+      // hash,
     }
-    const flipRes = await callAPI(config);
-    console.log(flipRes);
-    if(flipRes.status == -1) {
-      console.log("GameError")
-      return
-    }
-    const coinResult = flipRes.result;
-    const winning_rate = flipRes.winning_rate;
-    const win = flipRes.win;
-    const color = win ? winColor : failedColor
-
-    let spin_type = coinResult == 1 ? "spin-heads" : "spin-tails"
-
-    if(spin_type == spin) {
-      spin_type = getOtherSpin(spin_type)
-    }
-
-    const seed = flipRes.seed;
-    const nonce = flipRes.nonce;
-    const prov = {
-      hash:serverHash,
-      seed,nonce
-    }
-
-    setSpin(spin_type);
-    setTimeout(() => {
-      setPlaying(false)
-      setCashoutColor(color)
-      setCashout(winning_rate)
-      setProbables([prov,...provables])
-      if(!win) {
-        setBet(false)
-      }
-    }, 3000)
-
-    const next_hash = flipRes.next_hash;
-    setServerNextHash(next_hash)
+    socket.emit('coinflip', data)  
   }
 
   const funcCashout = async () => {
@@ -267,29 +315,40 @@ const GameField = () => {
           flexDirection="column"
           sx={{ backgroundImage: `url(${balancePng})`, backgroundSize: "cover", borderRadius: "18px" }}
         >
-          <VuiBox display="flex" justifyContent="space-beetween" alignItems="center">
-            <Box className="coin" id="coin" sx={{ animation : `${spin} 2.5s forwards`, aspectRatio:'1/1'}}>
-              <Box className="tails">
-                <img src={Tails}/>
-              </Box>
-              <Box className="heads">
-                <img src={Heads}/>
-              </Box>
-            </Box>
-          </VuiBox>
-          <VuiBox width="100%" padding="3px">
-            {prediction.map((pred, idx) => {
-                return <>
-                  {pred == 1 && <img className="prediction" key={idx} src={Heads}/>}
-                  {pred == 0 && <img className="prediction" key={idx} src={Tails}/>}
-                </>
-            })}
-          </VuiBox>
-          <VuiBox width="50%" m="auto">
-            <VuiTypography variant="h4" fontWeight="bold" sx={{textAlign:'center', color:cashoutColor }}>
-              x{cashout.toFixed(2)}
-            </VuiTypography>
-          </VuiBox>
+          {
+            !isConnected &&
+            <VuiBox display="block" alignItems="center">
+              <GradientCircularProgress />  
+            </VuiBox>
+          }
+          {
+            isConnected &&
+            <>
+              <VuiBox display="flex" justifyContent="space-beetween" alignItems="center">
+                <Box className="coin" id="coin" sx={{ animation : `${spin} 2.5s forwards`, aspectRatio:'1/1'}}>
+                  <Box className="tails">
+                    <img src={Tails}/>
+                  </Box>
+                  <Box className="heads">
+                    <img src={Heads}/>
+                  </Box>
+                </Box>
+              </VuiBox>
+              <VuiBox width="100%" padding="3px">
+                {prediction.map((pred, idx) => {
+                    return <>
+                      {pred == 1 && <img className="prediction" key={idx} src={Heads}/>}
+                      {pred == 0 && <img className="prediction" key={idx} src={Tails}/>}
+                    </>
+                })}
+              </VuiBox>
+              <VuiBox width="50%" m="auto">
+                <VuiTypography variant="h4" fontWeight="bold" sx={{textAlign:'center', color:cashoutColor }}>
+                  x{cashout.toFixed(2)}
+                </VuiTypography>
+              </VuiBox>
+            </>
+          }
         </VuiBox>
         <VuiBox display="block" justifyContent="space-beetween" alignItems="center">
           { bet &&
