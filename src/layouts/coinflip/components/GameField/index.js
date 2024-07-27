@@ -98,11 +98,23 @@ const GameField = () => {
   const {userid, balance} = useSelector((state) => state.user)
   const {Price_ETH, Price_BNB} = useSelector((state) => state.price)
   const [provables, setProbables] = useState([])
+  const [seedNonce, setSeedNonce] = useState(null)
   const dispatch = useDispatch();
+
+  useEffect(() => {
+    if(seedNonce) {
+      const prov = {
+        hash:serverHash,
+        seed:seedNonce.seed,
+        nonce:seedNonce.nonce
+      }
+      setProbables([prov,...provables])  
+    }
+  }, [seedNonce])
+
   const showWin = () => {
     setOpen(true);
   };
-
   const closeWin = () => {
     setOpen(false);
   };
@@ -161,17 +173,13 @@ const GameField = () => {
     
         const seed = data['seed'];
         const nonce = data['nonce'];
-        const prov = {
-          hash:serverHash,
-          seed,nonce
-        }
     
         setSpin(spin_type);
         setTimeout(() => {
           setPlaying(false)
           setCashoutColor(color)
           setCashout(winning_rate)
-          setProbables([prov,...provables])
+          setSeedNonce({seed,nonce})
           if(!win) {
             setBet(false)
           }
@@ -295,7 +303,7 @@ const GameField = () => {
       <VuiBox display="flex" mb="14px">
         <VuiBox mt={0.25} width="70%">
           <VuiTypography variant="button" fontWeight="regular" color="warning">
-            Balance : {isUSD ? '$' : getCryptoName(type)} {getVisibleBalance()}
+            {isUSD ? '$' : getCryptoName(type)} {getVisibleBalance()}
           </VuiTypography>
         </VuiBox>
         <VuiBox display="flex" mt={0.25} width="30%">
@@ -373,11 +381,11 @@ const GameField = () => {
           { bet &&
             <>
               <Stack direction="row" mx="auto" mt={1} spacing="10px" sx={{width:'100%'}} >
-                <VuiButton variant="contained" color="secondary" sx={{width:"50%", fontSize:"14px"}} disabled={playing} onClick={() => coinflip(1)}>
+                <VuiButton variant="contained" color="secondary" sx={{width:"50%", fontSize:"14px", border: '1px solid #555'}} disabled={playing} onClick={() => coinflip(1)}>
                   <VuiBox component="img" src={Heads} sx={{ width: "25px", aspectRatio: "1/1" }} />
                   &nbsp;&nbsp;&nbsp;&nbsp;Heads
                 </VuiButton>
-                <VuiButton variant="contained" color="secondary" sx={{width:"50%", fontSize:"14px"}} disabled={playing} onClick={() => coinflip(0)}>
+                <VuiButton variant="contained" color="secondary" sx={{width:"50%", fontSize:"14px", border: '1px solid #555'}} disabled={playing} onClick={() => coinflip(0)}>
                   <VuiBox component="img" src={Tails} sx={{ width: "25px", aspectRatio: "1/1" }} />
                   &nbsp;&nbsp;&nbsp;&nbsp;Tails
                 </VuiButton>
@@ -396,6 +404,9 @@ const GameField = () => {
                 width:"100%", 
                 fontSize: "16px", 
                 background:'#38c317', 
+                // color: '#fff',
+                // backgroundColor: '#1d803ab3',
+                // backgroundImage: 'conic-gradient(from 1turn, rgba(88, 175, 16, 1), rgba(29, 128, 58, 1))',
                 '&:disabled' : {background : "#385317"},
                 '&:hover' : {backgroundColor : "#38c317"}
               }}
@@ -409,7 +420,7 @@ const GameField = () => {
             <VuiBox mb={2} sx={{width:"50%"}}>
               <GradientBorder
                 minWidth="100%"
-                padding="1px"
+                // padding="1px"
                 borderRadius={borders.borderRadius.lg}
                 backgroundImage={radialGradient(
                   palette.gradients.borderLight.main,

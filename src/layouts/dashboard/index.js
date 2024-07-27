@@ -31,9 +31,9 @@ import WelcomeMark from "layouts/dashboard/components/WelcomeMark";
 // import { IoIosRocket } from "react-icons/io";
 // import { IoGlobe } from "react-icons/io5";
 // import { IoBuild } from "react-icons/io5";
-import { IoInvertMode } from "react-icons/io5";
-import { FaCircleDollarToSlot } from "react-icons/fa6";
-import { HiMiniArrowsUpDown } from "react-icons/hi2";
+// import { IoInvertMode } from "react-icons/io5";
+// import { FaCircleDollarToSlot } from "react-icons/fa6";
+// import { HiMiniArrowsUpDown } from "react-icons/hi2";
 // import { IoDocumentText } from "react-icons/io5";
 // import { FaShoppingCart } from "react-icons/fa";
 
@@ -45,10 +45,13 @@ import { HiMiniArrowsUpDown } from "react-icons/hi2";
 // import { barChartDataDashboard } from "layouts/dashboard/data/barChartData";
 // import { barChartOptionsDashboard } from "layouts/dashboard/data/barChartOptions";
 import './index.css';
+import Coinflip from '../../assets/images/coinflip.png';
+import Slot from '../../assets/images/slot.png';
+import Plinko from '../../assets/images/plinko.png';
 
 function Dashboard() {
-  const { gradients } = colors;
-  const { cardContent } = gradients;
+  // const { gradients } = colors;
+  // const { cardContent } = gradients;
 
   return (
     <DashboardLayout>
@@ -64,7 +67,7 @@ function Dashboard() {
                   count="CoinFlip"
                   
                   // percentage={{ color: "success", text: "+55%" }}
-                  icon={{ color: "info", component: <IoInvertMode size="22px" color="white"/> }}
+                  icon={{ color: "info", component: <img src={Coinflip} width="22px" height="22px"/> }}
                 />
               </Link>
             </Grid>
@@ -74,7 +77,7 @@ function Dashboard() {
                   title={{ text: "UniChat", fontWeight: "regular" }}
                   count="Slot"
                   // percentage={{ color: "success", text: "+55%" }}
-                  icon={{ color: "info", component: <FaCircleDollarToSlot size="22px" color="white" /> }}
+                  icon={{ color: "info", component: <img src={Slot} width="22px" height="22px"/> }}
                 />
               </Link>
             </Grid>
@@ -84,7 +87,7 @@ function Dashboard() {
                   title={{ text: "UniChat", fontWeight: "regular" }}
                   count="Plinko"
                   // percentage={{ color: "success", text: "+55%" }}
-                  icon={{ color: "info", component: <HiMiniArrowsUpDown  size="22px" color="white" /> }}
+                  icon={{ color: "info", component: <img src={Plinko} width="22px" height="22px"/> }}
                 />
               </Link>
             </Grid>
