@@ -404,9 +404,6 @@ const GameField = () => {
                 width:"100%", 
                 fontSize: "16px", 
                 background:'#38c317', 
-                // color: '#fff',
-                // backgroundColor: '#1d803ab3',
-                // backgroundImage: 'conic-gradient(from 1turn, rgba(88, 175, 16, 1), rgba(29, 128, 58, 1))',
                 '&:disabled' : {background : "#385317"},
                 '&:hover' : {backgroundColor : "#38c317"}
               }}
