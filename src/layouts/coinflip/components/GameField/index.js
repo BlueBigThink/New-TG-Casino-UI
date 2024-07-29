@@ -31,7 +31,6 @@ import GradientBorder from "examples/GradientBorder";
 import borders from "assets/theme/base/borders";
 import radialGradient from "assets/theme/functions/radialGradient";
 import Dialog from '@mui/material/Dialog';
-import { ToastContainer } from "react-toastr";
 // React icons
 import { FaEthereum } from "react-icons/fa";
 import { SiBinance } from "react-icons/si";
