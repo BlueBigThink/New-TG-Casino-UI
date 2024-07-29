@@ -8,13 +8,15 @@ import {
   Stack,
   Tab,
   Tabs,
-  Box
+  Box,
 } from "@mui/material";
+import toast, { Toaster } from 'react-hot-toast';
 
 // Vision UI Dashboard assets
 import balancePng from "assets/images/billing-background-balance.png";
 import Heads from "assets/images/heads.webp";
 import Tails from "assets/images/tails.webp";
+import Win from '../../../../assets/images/win.webp'
 
 import palette from "assets/theme/base/colors";
 import CircularProgress from '@mui/material/CircularProgress';
@@ -28,7 +30,7 @@ import VuiInput from "components/VuiInput";
 import GradientBorder from "examples/GradientBorder";
 import borders from "assets/theme/base/borders";
 import radialGradient from "assets/theme/functions/radialGradient";
-
+import Dialog from '@mui/material/Dialog';
 // React icons
 import { FaEthereum } from "react-icons/fa";
 import { SiBinance } from "react-icons/si";
@@ -73,15 +75,14 @@ const GradientCircularProgress = () => {
     </Box>
   );
 }
-
 const GameField = () => {
   const [controller] = useVisionUIController();
   const { isConnected } = controller;
+  const [open, setOpen] = useState(false);
 
   const [cashoutColor, setCashoutColor] = useState(winColor)
   const [spin, setSpin] = useState("");
   const [type, setType] = useState(ETH)
-  const [coin, setCoin] = useState(false);
   const [bet, setBet] = useState(false)
   const [betting, setBetting] = useState(false)
   const [amount, setAmount] = useState(0.5)
@@ -95,8 +96,26 @@ const GameField = () => {
   const {userid, balance} = useSelector((state) => state.user)
   const {Price_ETH, Price_BNB} = useSelector((state) => state.price)
   const [provables, setProbables] = useState([])
+  const [seedNonce, setSeedNonce] = useState(null)
   const dispatch = useDispatch();
-  
+
+  useEffect(() => {
+    if(seedNonce) {
+      const prov = {
+        hash:serverHash,
+        seed:seedNonce.seed,
+        nonce:seedNonce.nonce
+      }
+      setProbables([prov,...provables])  
+    }
+  }, [seedNonce])
+
+  const showWin = () => {
+    setOpen(true);
+  };
+  const closeWin = () => {
+    setOpen(false);
+  };
   const getOtherSpin = (spin_type) => {
     if(spin_type == "spin-heads") {
       return "spin-heads-1"
@@ -152,17 +171,13 @@ const GameField = () => {
     
         const seed = data['seed'];
         const nonce = data['nonce'];
-        const prov = {
-          hash:serverHash,
-          seed,nonce
-        }
     
         setSpin(spin_type);
         setTimeout(() => {
           setPlaying(false)
           setCashoutColor(color)
           setCashout(winning_rate)
-          setProbables([prov,...provables])
+          setSeedNonce({seed,nonce})
           if(!win) {
             setBet(false)
           }
@@ -210,15 +225,44 @@ const GameField = () => {
     setType(newValue);
     setAmount(0.0)
   };
+  const alertError = (content) => {
+    toast.error(content,
+    {
+      style: {
+        borderRadius: '10px',
+        background: '#344767',
+        color: '#fff',
+        fontSize: '14px',
+        },
+      }
+    );    
+  }
+  const alertSuccess = (content) => {
+    toast.success(content,
+    {
+      style: {
+        borderRadius: '10px',
+        background: '#344767',
+        color: '#fff',
+        fontSize: '14px',
+        },
+      }
+    );    
+  }
   const funcBet = async () => {
     try {
+      const price = isUSD ? ( type == 0 ? Price_ETH : Price_BNB ) : 1;
+      const betAmount = parseFloat((parseFloat(amount) / price).toFixed(4))
+      const curBalance = type == 0 ? balance.ETH : balance.BNB
+      if(betAmount > (curBalance / 10)){
+        alertError(`Impossible to bet ${isUSD ? '$' : getCryptoName(type)}${(curBalance / 10 * price).toFixed(3)} over this level`)
+        return
+      }
       setBetting(true)
       setPrediction([])
       setProbables([])
       setCashout(0)
       setCashoutColor(winColor)
-      const price = isUSD ? ( type == 0 ? Price_ETH : Price_BNB ) : 1;
-      const betAmount = parseFloat((parseFloat(amount) / price).toFixed(4))
   
       const data = {
         cmd : 'bet',
@@ -262,9 +306,22 @@ const GameField = () => {
       // hash,
     }
     socket.emit('coinflip', data)  
+    showWin()
     await fetchBalance()
   }
   return (
+    <>
+      <Toaster />
+      <Dialog
+        id="win-dialog"
+        open={open}
+        onClose={closeWin}
+        sx={{ '& div.MuiPaper-root' : { background : "transparent" } }}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <img src={Win}/>
+    </Dialog>
     <Card sx={{ padding: "30px", mt:"10px" }}>
       <VuiBox mt={0.25} width="100%">
         <VuiTypography variant="button" fontWeight="regular" color="white">
@@ -274,7 +331,7 @@ const GameField = () => {
       <VuiBox display="flex" mb="14px">
         <VuiBox mt={0.25} width="70%">
           <VuiTypography variant="button" fontWeight="regular" color="warning">
-            Balance : {isUSD ? '$' : getCryptoName(type)} {getVisibleBalance()}
+            {isUSD ? '$' : getCryptoName(type)} {getVisibleBalance()}
           </VuiTypography>
         </VuiBox>
         <VuiBox display="flex" mt={0.25} width="30%">
@@ -304,7 +361,6 @@ const GameField = () => {
           <Tab label="BNB" icon={<SiBinance color="white" size="20px" />} disabled={bet} sx={{minWidth: "50%"}}/>
         </Tabs>
       </VuiBox>
-
       <VuiBox display="flex" flexDirection="column" mt={1}>
         <VuiBox
           mb="10px"
@@ -352,11 +408,11 @@ const GameField = () => {
           { bet &&
             <>
               <Stack direction="row" mx="auto" mt={1} spacing="10px" sx={{width:'100%'}} >
-                <VuiButton variant="contained" color="secondary" sx={{width:"50%", fontSize:"14px"}} disabled={playing} onClick={() => coinflip(1)}>
+                <VuiButton variant="contained" color="secondary" sx={{width:"50%", fontSize:"14px", border: '1px solid #555'}} disabled={playing} onClick={() => coinflip(1)}>
                   <VuiBox component="img" src={Heads} sx={{ width: "25px", aspectRatio: "1/1" }} />
                   &nbsp;&nbsp;&nbsp;&nbsp;Heads
                 </VuiButton>
-                <VuiButton variant="contained" color="secondary" sx={{width:"50%", fontSize:"14px"}} disabled={playing} onClick={() => coinflip(0)}>
+                <VuiButton variant="contained" color="secondary" sx={{width:"50%", fontSize:"14px", border: '1px solid #555'}} disabled={playing} onClick={() => coinflip(0)}>
                   <VuiBox component="img" src={Tails} sx={{ width: "25px", aspectRatio: "1/1" }} />
                   &nbsp;&nbsp;&nbsp;&nbsp;Tails
                 </VuiButton>
@@ -388,7 +444,7 @@ const GameField = () => {
             <VuiBox mb={2} sx={{width:"50%"}}>
               <GradientBorder
                 minWidth="100%"
-                padding="1px"
+                // padding="1px"
                 borderRadius={borders.borderRadius.lg}
                 backgroundImage={radialGradient(
                   palette.gradients.borderLight.main,
@@ -439,6 +495,7 @@ const GameField = () => {
         })}
       </VuiBox>
     </Card>
+  </>
   );
 };
 
