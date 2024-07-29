@@ -8,8 +8,9 @@ import {
   Stack,
   Tab,
   Tabs,
-  Box
+  Box,
 } from "@mui/material";
+import toast, { Toaster } from 'react-hot-toast';
 
 // Vision UI Dashboard assets
 import balancePng from "assets/images/billing-background-balance.png";
@@ -30,7 +31,7 @@ import GradientBorder from "examples/GradientBorder";
 import borders from "assets/theme/base/borders";
 import radialGradient from "assets/theme/functions/radialGradient";
 import Dialog from '@mui/material/Dialog';
-
+import { ToastContainer } from "react-toastr";
 // React icons
 import { FaEthereum } from "react-icons/fa";
 import { SiBinance } from "react-icons/si";
@@ -75,7 +76,6 @@ const GradientCircularProgress = () => {
     </Box>
   );
 }
-
 const GameField = () => {
   const [controller] = useVisionUIController();
   const { isConnected } = controller;
@@ -84,7 +84,6 @@ const GameField = () => {
   const [cashoutColor, setCashoutColor] = useState(winColor)
   const [spin, setSpin] = useState("");
   const [type, setType] = useState(ETH)
-  const [coin, setCoin] = useState(false);
   const [bet, setBet] = useState(false)
   const [betting, setBetting] = useState(false)
   const [amount, setAmount] = useState(0.5)
@@ -227,15 +226,44 @@ const GameField = () => {
     setType(newValue);
     setAmount(0.0)
   };
+  const alertError = (content) => {
+    toast.error(content,
+    {
+      style: {
+        borderRadius: '10px',
+        background: '#344767',
+        color: '#fff',
+        fontSize: '14px',
+        },
+      }
+    );    
+  }
+  const alertSuccess = (content) => {
+    toast.success(content,
+    {
+      style: {
+        borderRadius: '10px',
+        background: '#344767',
+        color: '#fff',
+        fontSize: '14px',
+        },
+      }
+    );    
+  }
   const funcBet = async () => {
     try {
+      const price = isUSD ? ( type == 0 ? Price_ETH : Price_BNB ) : 1;
+      const betAmount = parseFloat((parseFloat(amount) / price).toFixed(4))
+      const curBalance = type == 0 ? balance.ETH : balance.BNB
+      if(betAmount > (curBalance / 10)){
+        alertError(`Impossible to bet ${isUSD ? '$' : getCryptoName(type)}${(curBalance / 10 * price).toFixed(3)} over this level`)
+        return
+      }
       setBetting(true)
       setPrediction([])
       setProbables([])
       setCashout(0)
       setCashoutColor(winColor)
-      const price = isUSD ? ( type == 0 ? Price_ETH : Price_BNB ) : 1;
-      const betAmount = parseFloat((parseFloat(amount) / price).toFixed(4))
   
       const data = {
         cmd : 'bet',
@@ -284,6 +312,7 @@ const GameField = () => {
   }
   return (
     <>
+      <Toaster />
       <Dialog
         id="win-dialog"
         open={open}
@@ -333,7 +362,6 @@ const GameField = () => {
           <Tab label="BNB" icon={<SiBinance color="white" size="20px" />} disabled={bet} sx={{minWidth: "50%"}}/>
         </Tabs>
       </VuiBox>
-
       <VuiBox display="flex" flexDirection="column" mt={1}>
         <VuiBox
           mb="10px"

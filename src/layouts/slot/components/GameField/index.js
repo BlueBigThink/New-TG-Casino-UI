@@ -25,6 +25,7 @@ import radialGradient from "assets/theme/functions/radialGradient";
 import SlotCounter from 'react-slot-counter';
 import Dialog from '@mui/material/Dialog';
 import CircularProgress from '@mui/material/CircularProgress';
+import toast, { Toaster } from 'react-hot-toast';
 
 import { useVisionUIController } from "context";
 
@@ -144,6 +145,30 @@ const GameField = () => {
   useEffect(() => {
     fetchBalance()
   }, [userid])
+  const alertError = (content) => {
+    toast.error(content,
+    {
+      style: {
+        borderRadius: '10px',
+        background: '#344767',
+        color: '#fff',
+        fontSize: '14px',
+        },
+      }
+    );    
+  }
+  const alertSuccess = (content) => {
+    toast.success(content,
+    {
+      style: {
+        borderRadius: '10px',
+        background: '#344767',
+        color: '#fff',
+        fontSize: '14px',
+        },
+      }
+    );    
+  }  
   const fetchBalance = async () => {
     const config = {
       method: 'POST',
@@ -170,10 +195,15 @@ const GameField = () => {
     setAmount(0.0)
   };
   const funcSlot = async () => {
-    setBetting(true)
-    setPrevSlots(slots)
     const price = isUSD ? ( type == 0 ? Price_ETH : Price_BNB ) : 1;
     const betAmount = parseFloat((parseFloat(amount) / price).toFixed(4))
+    const curBalance = type == 0 ? balance.ETH : balance.BNB
+    if(betAmount > (curBalance / 10)){
+      alertError(`Impossible to bet ${isUSD ? '$' : getCryptoName(type)}${(curBalance / 10 * price).toFixed(3)} over this level`)
+      return
+    }
+    setBetting(true)
+    setPrevSlots(slots)
     
     const data = {
       user_id : userid,
@@ -188,6 +218,7 @@ const GameField = () => {
 
   return (
     <>
+      <Toaster />
       <Dialog
         id="win-dialog"
         open={open}
