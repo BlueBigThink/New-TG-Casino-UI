@@ -5,7 +5,7 @@ const initialState = {
   username: "",
   userid: "",
   hash : "",
-  balance: {ETH: 0.0, BNB: 0.0},
+  balance: {ETH: 0.0, BNB: 0.0, SOL: 0.0},
   age: -1
 }
 

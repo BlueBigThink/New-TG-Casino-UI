@@ -40,6 +40,7 @@ import Win from '../../../../assets/images/win.webp'
 // React icons
 import { FaEthereum } from "react-icons/fa";
 import { SiBinance } from "react-icons/si";
+import { TbCurrencySolana } from "react-icons/tb";
 
 import { setBalance } from "../../../../slices/user.slice";
 import callAPI from "../../../../api/index";
@@ -49,6 +50,8 @@ import './index.css'
 
 const ETH = 0;
 const BNB = 1;
+const SOL = 2;
+const UNT = 3;
 const SLOTS = [Cherry, Dollar, Heart, Seven, Spade, Tomato]
 const getCryptoName = (crypto) => {
   let name = ''
@@ -58,6 +61,12 @@ const getCryptoName = (crypto) => {
       break;
     case BNB:
       name = 'BNB'
+      break;
+    case SOL:
+      name = 'SOL'
+      break;
+    case UNT:
+      name = 'UNT'
       break;
   }
   return name
@@ -94,7 +103,7 @@ const GameField = () => {
   const [tabsOrientation, setTabsOrientation] = useState("horizontal");
   const [cashout, setCashout] = useState(0)
   const {userid, balance} = useSelector((state) => state.user)
-  const {Price_ETH, Price_BNB} = useSelector((state) => state.price)
+  const {Price_ETH, Price_BNB, Price_SOL, Price_UNT} = useSelector((state) => state.price)
   const slotRef = React.useRef(null);
   const [slots, setSlots] = useState([Seven,Seven,Seven,Seven,Seven])
   const [prevSlots, setPrevSlots] = useState([Seven,Seven,Seven,Seven,Seven])
@@ -181,8 +190,44 @@ const GameField = () => {
     const balance = await callAPI(config)
     dispatch(setBalance(balance))
   }
+  const getPriceByType =(type) => {
+    let price = 0
+    switch(type) {
+      case 0:
+        price = Price_ETH;
+        break;
+      case 1:
+        price = Price_BNB;
+        break;
+      case 2:
+        price = Price_SOL;
+        break;
+      case 3:
+        price = Price_UNT;
+        break;
+      }
+    return price;
+  }
+  const getBalanceByType =(type) => {
+    let bal = 0
+    switch(type) {
+      case 0:
+        bal = balance.ETH;
+        break;
+      case 1:
+        bal = balance.BNB;
+        break;
+      case 2:
+        bal = balance.SOL;
+        break;
+      case 3:
+        bal = balance.UNT;
+        break;
+      }
+    return bal;
+  }
   const getVisibleBalance = () => {
-    return parseFloat(((isUSD ? (type == 0 ? Price_ETH : Price_BNB) : 1) * (type == 0 ? balance.ETH : balance.BNB)).toFixed(4))
+    return parseFloat(((isUSD ? (getPriceByType(type)) : 1) * (getBalanceByType(type))).toFixed(4))
   }
   const funcBetAmount = (times) => {
     const num = amount * times;
@@ -264,8 +309,9 @@ const GameField = () => {
             onChange={handleKindChange}
             sx={{ background: "transparent", display: "flex", width: '100%', margin:"auto"}}
           >
-            <Tab label="ETH" icon={<FaEthereum color="white" size="20px" />} disabled={bet} sx={{minWidth: "50%"}}/>
-            <Tab label="BNB" icon={<SiBinance color="white" size="20px" />} disabled={bet} sx={{minWidth: "50%"}}/>
+          <Tab label="ETH" icon={<FaEthereum color="white" size="20px" />} disabled={bet} sx={{minWidth: "33%"}}/>
+          <Tab label="BNB" icon={<SiBinance color="white" size="20px" />} disabled={bet} sx={{minWidth: "33%"}}/>
+          <Tab label="SOL" icon={<TbCurrencySolana color="white" size="20px" />} disabled={bet} sx={{minWidth: "34%"}}/>
           </Tabs>
         </VuiBox>
 

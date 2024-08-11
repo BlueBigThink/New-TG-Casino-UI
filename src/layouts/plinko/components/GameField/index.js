@@ -31,6 +31,8 @@ import { useVisionUIController } from "context";
 // React icons
 import { FaEthereum } from "react-icons/fa";
 import { SiBinance } from "react-icons/si";
+import { TbCurrencySolana } from "react-icons/tb";
+
 import { TbViewportWide } from "react-icons/tb";
 import { TbViewportNarrow } from "react-icons/tb";
 import { LuRectangleVertical } from "react-icons/lu";
@@ -46,6 +48,8 @@ import './index.css'
 
 const ETH = 0;
 const BNB = 1;
+const SOL = 2;
+const UNT = 3;
 const getCryptoName = (crypto) => {
   let name = ''
   switch(crypto) {
@@ -55,10 +59,15 @@ const getCryptoName = (crypto) => {
     case BNB:
       name = 'BNB'
       break;
+    case SOL:
+      name = 'SOL'
+      break;
+    case UNT:
+      name = 'UNT'
+      break;
   }
   return name
 }
-
 const GradientCircularProgress = () => {
   return (
     <Box sx={{marginLeft : '40%'}}>
@@ -85,7 +94,7 @@ const GameField = () => {
   const [isUSD, setIsUSD] = useState(true);
   const [tabsOrientation, setTabsOrientation] = useState("horizontal");
   const {userid, balance} = useSelector((state) => state.user);
-  const {Price_ETH, Price_BNB} = useSelector((state) => state.price);
+  const {Price_ETH, Price_BNB, Price_SOL, Price_UNT} = useSelector((state) => state.price)
   const { 
     plinkoRunning, 
     plinkoHistory 
@@ -111,6 +120,8 @@ const GameField = () => {
       dispatch(setBalance({
         ETH: data['ETH'],
         BNB: data['BNB'],
+        SOL: data['SOL'],
+        UNT: data['UNT'],
       }))
 
     }catch(e){
@@ -137,8 +148,44 @@ const GameField = () => {
     const balance = await callAPI(config)
     dispatch(setBalance(balance))
   }
+  const getPriceByType =(type) => {
+    let price = 0
+    switch(type) {
+      case 0:
+        price = Price_ETH;
+        break;
+      case 1:
+        price = Price_BNB;
+        break;
+      case 2:
+        price = Price_SOL;
+        break;
+      case 3:
+        price = Price_UNT;
+        break;
+      }
+    return price;
+  }
+  const getBalanceByType =(type) => {
+    let bal = 0
+    switch(type) {
+      case 0:
+        bal = balance.ETH;
+        break;
+      case 1:
+        bal = balance.BNB;
+        break;
+      case 2:
+        bal = balance.SOL;
+        break;
+      case 3:
+        bal = balance.UNT;
+        break;
+      }
+    return bal;
+  }
   const getVisibleBalance = () => {
-    return parseFloat(((isUSD ? (type == 0 ? Price_ETH : Price_BNB) : 1) * (type == 0 ? balance.ETH : balance.BNB)).toFixed(4))
+    return parseFloat(((isUSD ? (getPriceByType(type)) : 1) * (getBalanceByType(type))).toFixed(4))
   }
   const funcBetAmount = (times) => {
     const num = amount * times;
@@ -155,9 +202,9 @@ const GameField = () => {
   }
   const onBet = () => {
     if (plinkoRunning > 15) return
-    const price = isUSD ? ( type == 0 ? Price_ETH : Price_BNB ) : 1;
+    const price = isUSD ? ( getPriceByType(type) ) : 1;
     const betAmount = parseFloat((parseFloat(amount) / price).toFixed(4))
-    const curBalance = type == 0 ? balance.ETH : balance.BNB
+    const curBalance = getBalanceByType(type)
     if(betAmount > (curBalance / 10)){
       alertError(`Impossible to bet ${isUSD ? '$' : getCryptoName(type)}${(curBalance / 10 * price).toFixed(3)} over this level`)
       return
@@ -168,6 +215,10 @@ const GameField = () => {
       newBalance.ETH = balance.ETH - betAmount
     } else if(type == 1) {
       newBalance.BNB = balance.BNB - betAmount
+    } else if(type == 2) {
+      newBalance.SOL = balance.SOL - betAmount
+    } else if(type == 3) {
+      newBalance.UNT = balance.UNT - betAmount
     }
     dispatch(setBalance(newBalance))
   }
@@ -255,8 +306,9 @@ const GameField = () => {
             onChange={handleKindChange}
             sx={{ background: "transparent", display: "flex", width: '100%', margin:"auto"}}
           >
-            <Tab label="ETH" icon={<FaEthereum color="white" size="20px" />} disabled={bet} sx={{minWidth: "50%"}}/>
-            <Tab label="BNB" icon={<SiBinance color="white" size="20px" />} disabled={bet} sx={{minWidth: "50%"}}/>
+          <Tab label="ETH" icon={<FaEthereum color="white" size="20px" />} disabled={bet} sx={{minWidth: "33%"}}/>
+          <Tab label="BNB" icon={<SiBinance color="white" size="20px" />} disabled={bet} sx={{minWidth: "33%"}}/>
+          <Tab label="SOL" icon={<TbCurrencySolana color="white" size="20px" />} disabled={bet} sx={{minWidth: "34%"}}/>
           </Tabs>
         </VuiBox>
 
@@ -349,7 +401,7 @@ const GameField = () => {
                 '&:hover' : {backgroundColor : "#38c317"} ,
                 '&:focus:not(:hover)' : {backgroundColor : "#38c317"},
               }} 
-              // disabled={amount <= 0 || betting || !isConnected}
+              disabled={amount <= 0 || !isConnected}
               onClick={onBet}
             >
               Bet

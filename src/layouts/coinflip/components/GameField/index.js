@@ -34,6 +34,7 @@ import Dialog from '@mui/material/Dialog';
 // React icons
 import { FaEthereum } from "react-icons/fa";
 import { SiBinance } from "react-icons/si";
+import { TbCurrencySolana } from "react-icons/tb";
 
 import { setBalance } from "../../../../slices/user.slice";
 import callAPI from "../../../../api/index";
@@ -45,6 +46,8 @@ import './index.css'
 
 const ETH = 0;
 const BNB = 1;
+const SOL = 2;
+const UNT = 3;
 const getCryptoName = (crypto) => {
   let name = ''
   switch(crypto) {
@@ -53,6 +56,12 @@ const getCryptoName = (crypto) => {
       break;
     case BNB:
       name = 'BNB'
+      break;
+    case SOL:
+      name = 'SOL'
+      break;
+    case UNT:
+      name = 'UNT'
       break;
   }
   return name
@@ -94,7 +103,7 @@ const GameField = () => {
   const [tabsOrientation, setTabsOrientation] = useState("horizontal");
   const [cashout, setCashout] = useState(0)
   const {userid, balance} = useSelector((state) => state.user)
-  const {Price_ETH, Price_BNB} = useSelector((state) => state.price)
+  const {Price_ETH, Price_BNB, Price_SOL, Price_UNT} = useSelector((state) => state.price)
   const [provables, setProbables] = useState([])
   const [seedNonce, setSeedNonce] = useState(null)
   const dispatch = useDispatch();
@@ -139,6 +148,8 @@ const GameField = () => {
           dispatch(setBalance({
             ETH: data['ETH'],
             BNB: data['BNB'],
+            SOL: data['SOL'],
+            UNT: data['UNT'],
           }))
           setBet(true)
           setBetting(false)
@@ -212,8 +223,44 @@ const GameField = () => {
     const balance = await callAPI(config)
     dispatch(setBalance(balance))
   }
+  const getPriceByType =(type) => {
+    let price = 0
+    switch(type) {
+      case 0:
+        price = Price_ETH;
+        break;
+      case 1:
+        price = Price_BNB;
+        break;
+      case 2:
+        price = Price_SOL;
+        break;
+      case 3:
+        price = Price_UNT;
+        break;
+      }
+    return price;
+  }
+  const getBalanceByType =(type) => {
+    let bal = 0
+    switch(type) {
+      case 0:
+        bal = balance.ETH;
+        break;
+      case 1:
+        bal = balance.BNB;
+        break;
+      case 2:
+        bal = balance.SOL;
+        break;
+      case 3:
+        bal = balance.UNT;
+        break;
+      }
+    return bal;
+  }
   const getVisibleBalance = () => {
-    return parseFloat(((isUSD ? (type == 0 ? Price_ETH : Price_BNB) : 1) * (type == 0 ? balance.ETH : balance.BNB)).toFixed(4))
+    return parseFloat(((isUSD ? (getPriceByType(type)) : 1) * (getBalanceByType(type))).toFixed(4))
   }
   const funcBetAmount = (times) => {
     const num = amount * times;
@@ -251,9 +298,9 @@ const GameField = () => {
   }
   const funcBet = async () => {
     try {
-      const price = isUSD ? ( type == 0 ? Price_ETH : Price_BNB ) : 1;
+      const price = isUSD ? ( getPriceByType(type) ) : 1;
       const betAmount = parseFloat((parseFloat(amount) / price).toFixed(4))
-      const curBalance = type == 0 ? balance.ETH : balance.BNB
+      const curBalance = getBalanceByType(type)
       if(betAmount > (curBalance / 10)){
         alertError(`Impossible to bet ${isUSD ? '$' : getCryptoName(type)}${(curBalance / 10 * price).toFixed(3)} over this level`)
         return
@@ -357,8 +404,9 @@ const GameField = () => {
           onChange={handleKindChange}
           sx={{ background: "transparent", display: "flex", width: '100%', margin:"auto"}}
         >
-          <Tab label="ETH" icon={<FaEthereum color="white" size="20px" />} disabled={bet} sx={{minWidth: "50%"}}/>
-          <Tab label="BNB" icon={<SiBinance color="white" size="20px" />} disabled={bet} sx={{minWidth: "50%"}}/>
+          <Tab label="ETH" icon={<FaEthereum color="white" size="20px" />} disabled={bet} sx={{minWidth: "33%"}}/>
+          <Tab label="BNB" icon={<SiBinance color="white" size="20px" />} disabled={bet} sx={{minWidth: "33%"}}/>
+          <Tab label="SOL" icon={<TbCurrencySolana color="white" size="20px" />} disabled={bet} sx={{minWidth: "34%"}}/>
         </Tabs>
       </VuiBox>
       <VuiBox display="flex" flexDirection="column" mt={1}>

@@ -11,7 +11,7 @@ import { useVisionUIController, setMiniSidenav, setIsConnected } from "context";
 import callAPI from "./api/index";
 
 import { CASINO_SERVER } from "./variables/url";
-import { setETH, setBNB } from "./slices/price.slice";
+import { setETH, setBNB, setSOL, setUNT } from "./slices/price.slice";
 import {socket} from './socket';
 
 export default function App() {
@@ -28,8 +28,10 @@ export default function App() {
         url: `${CASINO_SERVER}/price`
       }
       const priceData = await callAPI(config);
-      reduxDispatch(setETH(priceData[0]['Price']))
-      reduxDispatch(setBNB(priceData[1]['Price']))
+      reduxDispatch(setETH(priceData['ETH']))
+      reduxDispatch(setBNB(priceData['BNB']))
+      reduxDispatch(setSOL(priceData['SOL']))
+      reduxDispatch(setUNT(priceData['UNT']))
     } catch (err) {
       console.error("Failed to fetch price", err);
     }
