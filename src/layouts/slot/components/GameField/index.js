@@ -37,10 +37,9 @@ import Spade from '../../../../assets/images/slot/spade.png'
 import Tomato from '../../../../assets/images/slot/tomato.png'
 import BG from '../../../../assets/images/slot/bg.png'
 import Win from '../../../../assets/images/win.webp'
-// React icons
-import { FaEthereum } from "react-icons/fa";
-import { SiBinance } from "react-icons/si";
-import { TbCurrencySolana } from "react-icons/tb";
+import Token_ETH from "../../../../assets/images/coins/ETH.webp"
+import Token_BNB from "../../../../assets/images/coins/BNB.webp"
+import Token_SOL from "../../../../assets/images/coins/SOL.webp"
 
 import { setBalance } from "../../../../slices/user.slice";
 import callAPI from "../../../../api/index";
@@ -240,11 +239,11 @@ const GameField = () => {
     setAmount(0.0)
   };
   const funcSlot = async () => {
-    const price = isUSD ? ( type == 0 ? Price_ETH : Price_BNB ) : 1;
+    const price = isUSD ? ( getPriceByType(type) ) : 1;
     const betAmount = parseFloat((parseFloat(amount) / price).toFixed(4))
-    const curBalance = type == 0 ? balance.ETH : balance.BNB
-    if(betAmount > (curBalance / 10)){
-      alertError(`Impossible to bet ${isUSD ? '$' : getCryptoName(type)}${(curBalance / 10 * price).toFixed(3)} over this level`)
+    const curBalance = getBalanceByType(type)
+    if((price * curBalance) >= 500 && betAmount > (curBalance / 10)){
+      alertError(`Please bet less than ${isUSD ? '$' : getCryptoName(type)}${(curBalance / 10 * price).toFixed(1)}`)
       return
     }
     setBetting(true)
@@ -274,16 +273,11 @@ const GameField = () => {
       >
         <img src={Win}/>
       </Dialog>
-      <Card sx={{ padding: "30px", mt:"10px" }}>
-        <VuiBox mt={0.25} width="100%">
-          <VuiTypography variant="button" fontWeight="regular" color="white">
-            HouseCutFee : 5%
-          </VuiTypography>
-        </VuiBox>
+      <Card sx={{ padding: "10px 30px", mt:"10px" }}>
         <VuiBox display="flex" mb="14px">
           <VuiBox mt={0.25} width="70%">
             <VuiTypography variant="button" fontWeight="regular" color="warning">
-              Balance : {isUSD ? '$' : getCryptoName(type)} {getVisibleBalance()}
+              {isUSD ? '$' : getCryptoName(type)} {getVisibleBalance()}
             </VuiTypography>
           </VuiBox>
           <VuiBox display="flex" mt={0.25} width="30%">
@@ -307,11 +301,24 @@ const GameField = () => {
             orientation={tabsOrientation}
             value={type}
             onChange={handleKindChange}
-            sx={{ background: "transparent", display: "flex", width: '100%', margin:"auto"}}
+            sx={{ background: "transparent", display: "flex",
+              '& > div.MuiTabs-scroller' : {
+                flex: "none",
+                margin: "auto",
+                width: "auto",
+              },
+              '& > div > span' : {
+                borderRadius : '50%',
+                border: "2px solid #0075ff",
+                color: "#F97316",
+                background: "transparent",
+              }
+            }}
+            
           >
-          <Tab label="ETH" icon={<FaEthereum color="white" size="20px" />} disabled={bet} sx={{minWidth: "33%"}}/>
-          <Tab label="BNB" icon={<SiBinance color="white" size="20px" />} disabled={bet} sx={{minWidth: "33%"}}/>
-          <Tab label="SOL" icon={<TbCurrencySolana color="white" size="20px" />} disabled={bet} sx={{minWidth: "34%"}}/>
+            <Tab label="" icon={<img src={Token_ETH} width="30px"/>} disabled={bet} sx={{minWidth: "30px"}}/>
+            <Tab label="" icon={<img src={Token_BNB} width="30px"/>} disabled={bet} sx={{minWidth: "30px"}}/>
+            <Tab label="" icon={<img src={Token_SOL} width="30px"/>} disabled={bet} sx={{minWidth: "30px"}}/>
           </Tabs>
         </VuiBox>
 

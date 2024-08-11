@@ -14,15 +14,16 @@ import Toolbar from "@mui/material/Toolbar";
 import IconButton from "@mui/material/IconButton";
 import Menu from "@mui/material/Menu";
 import Icon from "@mui/material/Icon";
+import Fab from "@mui/material/Fab";
 
 // Vision UI Dashboard React components
 import VuiBox from "components/VuiBox";
-
+import VuiTypography from "components/VuiTypography";
 // Vision UI Dashboard React example components
 import Breadcrumbs from "examples/Breadcrumbs";
 import NotificationItem from "examples/Items/NotificationItem";
+import { FiCoffee } from "react-icons/fi";
 
-// Custom styles for DashboardNavbar
 import {
   navbar,
   navbarContainer,
@@ -91,21 +92,21 @@ function DashboardNavbar({ absolute, light, isMini }) {
       onClose={handleCloseMenu}
       sx={{ mt: 2 }}
     >
-      <NotificationItem
-        image={<img src={logoSpotify} alt="person" />}
+      {/* <NotificationItem
+        image={<GiFloatingPlatforms />}
         title={["New album", "by Travis Scott"]}
-        date="1 day"
+        date="∞ days"
         onClick={handleCloseMenu}
-      />
+      /> */}
       <NotificationItem
         color="text"
         image={
           <Icon fontSize="small" sx={{ color: ({ palette: { white } }) => white.main }}>
-            payment
+            notifications
           </Icon>
         }
-        title={["", "Payment successfully completed"]}
-        date="2 days"
+        title={["", "🎉 Platform Launched!"]}
+        date="∞ days"
         onClick={handleCloseMenu}
       />
     </Menu>
@@ -123,7 +124,14 @@ function DashboardNavbar({ absolute, light, isMini }) {
         </VuiBox>
         {isMini ? null : (
           <VuiBox sx={(theme) => navbarRow(theme, { isMini })}>
-            <VuiBox pr={1}/>
+            <VuiBox pr={1}>
+              <Fab variant="extended" color="transparent" size="small">
+                <FiCoffee sx={{ mr: 2 }} color="white"/>&nbsp;&nbsp;&nbsp;
+                <VuiTypography variant="button" fontWeight="regular" color="white" line>
+                  5%
+                </VuiTypography>
+              </Fab>              
+            </VuiBox>
             <VuiBox color={light ? "white" : "inherit"}>
               <IconButton
                 size="small"
