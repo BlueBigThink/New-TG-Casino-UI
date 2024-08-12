@@ -128,7 +128,7 @@ function DashboardNavbar({ absolute, light, isMini }) {
               <Fab variant="extended" color="transparent" size="small">
                 <FiCoffee sx={{ mr: 2 }} color="white"/>&nbsp;&nbsp;&nbsp;
                 <VuiTypography variant="button" fontWeight="regular" color="white" line>
-                  5%
+                  2%
                 </VuiTypography>
               </Fab>              
             </VuiBox>

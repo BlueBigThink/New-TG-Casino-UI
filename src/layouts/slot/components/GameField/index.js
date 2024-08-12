@@ -8,7 +8,8 @@ import {
   Stack,
   Tab,
   Tabs,
-  Box
+  Box,
+  Grid
 } from "@mui/material";
 
 import palette from "assets/theme/base/colors";
@@ -35,8 +36,10 @@ import Heart from '../../../../assets/images/slot/heart.png'
 import Seven from '../../../../assets/images/slot/seven.png'
 import Spade from '../../../../assets/images/slot/spade.png'
 import Tomato from '../../../../assets/images/slot/tomato.png'
-import BG from '../../../../assets/images/slot/bg.png'
+
+import BG from '../../../../assets/images/slot/bg.jpg'
 import Win from '../../../../assets/images/win.webp'
+
 import Token_ETH from "../../../../assets/images/coins/ETH.webp"
 import Token_BNB from "../../../../assets/images/coins/BNB.webp"
 import Token_SOL from "../../../../assets/images/coins/SOL.webp"
@@ -104,8 +107,8 @@ const GameField = () => {
   const {userid, balance} = useSelector((state) => state.user)
   const {Price_ETH, Price_BNB, Price_SOL, Price_UNT} = useSelector((state) => state.price)
   const slotRef = React.useRef(null);
-  const [slots, setSlots] = useState([Seven,Seven,Seven,Seven,Seven])
-  const [prevSlots, setPrevSlots] = useState([Seven,Seven,Seven,Seven,Seven])
+  const [slots, setSlots] = useState([Dollar,Spade,Dollar,Spade,Dollar])
+  const [prevSlots, setPrevSlots] = useState([Dollar,Spade,Dollar,Spade,Dollar])
   const dispatch = useDispatch();
 
   const showWin = () => {
@@ -116,7 +119,6 @@ const GameField = () => {
     setOpen(false);
   };
   const onSlot = (data) => {
-    console.log(data)
     try{
       const user_id = data['user_id']
       if(user_id != userid) {
@@ -131,15 +133,15 @@ const GameField = () => {
       slotRef.current.startAnimation()
       setTimeout(() => {
         setCashout(data['cashout'])
-        if(data['cashout'] > 2) {
+        if(data['cashout'] >= 1) {
           setCashoutColor(winColor)
           showWin()
         } else {
           setCashoutColor(failedColor)
         }
         setBetting(false)
+        fetchBalance()
       }, 3000)
-      fetchBalance()
     }catch(e){
       setBetting(false)
       console.error('socket data error :', e.toString())
@@ -257,6 +259,17 @@ const GameField = () => {
       coin_type: parseInt(type),
 
     }
+    const newBalance = Object.assign({}, balance);
+    if(type == 0) {
+      newBalance.ETH = balance.ETH - betAmount
+    } else if(type == 1) {
+      newBalance.BNB = balance.BNB - betAmount
+    } else if(type == 2) {
+      newBalance.SOL = balance.SOL - betAmount
+    } else if(type == 3) {
+      newBalance.UNT = balance.UNT - betAmount
+    }
+    dispatch(setBalance(newBalance))
     socket.emit('slot', data)
   }
 
@@ -309,7 +322,8 @@ const GameField = () => {
               },
               '& > div > span' : {
                 borderRadius : '50%',
-                border: "2px solid #0075ff",
+                border: "3px solid",
+                borderColor : type == 0 ? "#0075ff" : (type == 1 ? "orange" : "purple"),
                 color: "#F97316",
                 background: "transparent",
               }
@@ -417,10 +431,136 @@ const GameField = () => {
                 x2
               </VuiButton>
             </Stack>
-
           </VuiBox>
         </VuiBox>
       </Card>
+      <VuiBox justifyContent="space-between" alignItems="left" mt={3} ml={1}>
+        <Grid container spacing={1}>
+          <Grid item xs={2}>
+            <VuiTypography variant="h5" sx={{textAlign:'center', color:"#fff" }}></VuiTypography>
+          </Grid>
+          <Grid item xs={3}>
+            <VuiTypography variant="h5" sx={{textAlign:'center', color:"#fff" }}>5</VuiTypography>
+          </Grid>
+          <Grid item xs={2}>
+            <VuiTypography variant="h5" sx={{textAlign:'center', color:"#fff" }}>4</VuiTypography>
+          </Grid>
+          <Grid item xs={2}>
+            <VuiTypography variant="h5" sx={{textAlign:'center', color:"#fff" }}>3</VuiTypography>
+          </Grid>
+          <Grid item xs={2}>
+            <VuiTypography variant="h5" sx={{textAlign:'center', color:"#fff" }}>2</VuiTypography>
+          </Grid>
+          {/*************************/}
+          <Grid item xs={2}>
+            <VuiTypography variant="h5" sx={{textAlign:'center', color:"#fff" }}>
+              <img src={Seven} width="20px"/>
+            </VuiTypography>
+          </Grid>
+          <Grid item xs={3}>
+            <VuiTypography variant="h5" sx={{textAlign:'center', color:"#fff" }}>x100</VuiTypography>
+          </Grid>
+          <Grid item xs={2}>
+            <VuiTypography variant="h5" sx={{textAlign:'center', color:"#fff" }}>x20</VuiTypography>
+          </Grid>
+          <Grid item xs={2}>
+            <VuiTypography variant="h5" sx={{textAlign:'center', color:"#fff" }}>x5</VuiTypography>
+          </Grid>
+          <Grid item xs={2}>
+            <VuiTypography variant="h5" sx={{textAlign:'center', color:"#fff" }}>x1</VuiTypography>
+          </Grid>
+          {/*************************/}
+          <Grid item xs={2}>
+            <VuiTypography variant="h5" sx={{textAlign:'center', color:"#fff" }}>
+              <img src={Dollar} width="20px"/>
+            </VuiTypography>
+          </Grid>
+          <Grid item xs={3}>
+            <VuiTypography variant="h5" sx={{textAlign:'center', color:"#fff" }}>x80</VuiTypography>
+          </Grid>
+          <Grid item xs={2}>
+            <VuiTypography variant="h5" sx={{textAlign:'center', color:"#fff" }}>x16</VuiTypography>
+          </Grid>
+          <Grid item xs={2}>
+            <VuiTypography variant="h5" sx={{textAlign:'center', color:"#fff" }}>x4</VuiTypography>
+          </Grid>
+          <Grid item xs={2}>
+            <VuiTypography variant="h5" sx={{textAlign:'center', color:"#fff" }}>x0.8</VuiTypography>
+          </Grid>
+          {/*************************/}
+          <Grid item xs={2}>
+            <VuiTypography variant="h5" sx={{textAlign:'center', color:"#fff" }}>
+              <img src={Spade} width="20px"/>
+            </VuiTypography>
+          </Grid>
+          <Grid item xs={3}>
+            <VuiTypography variant="h5" sx={{textAlign:'center', color:"#fff" }}>x60</VuiTypography>
+          </Grid>
+          <Grid item xs={2}>
+            <VuiTypography variant="h5" sx={{textAlign:'center', color:"#fff" }}>x12</VuiTypography>
+          </Grid>
+          <Grid item xs={2}>
+            <VuiTypography variant="h5" sx={{textAlign:'center', color:"#fff" }}>x3</VuiTypography>
+          </Grid>
+          <Grid item xs={2}>
+            <VuiTypography variant="h5" sx={{textAlign:'center', color:"#fff" }}>x0.6</VuiTypography>
+          </Grid>
+          {/*************************/}
+          <Grid item xs={2}>
+            <VuiTypography variant="h5" sx={{textAlign:'center', color:"#fff" }}>
+              <img src={Heart} width="20px"/>
+            </VuiTypography>
+          </Grid>
+          <Grid item xs={3}>
+            <VuiTypography variant="h5" sx={{textAlign:'center', color:"#fff" }}>x40</VuiTypography>
+          </Grid>
+          <Grid item xs={2}>
+            <VuiTypography variant="h5" sx={{textAlign:'center', color:"#fff" }}>x8</VuiTypography>
+          </Grid>
+          <Grid item xs={2}>
+            <VuiTypography variant="h5" sx={{textAlign:'center', color:"#fff" }}>x2</VuiTypography>
+          </Grid>
+          <Grid item xs={2}>
+            <VuiTypography variant="h5" sx={{textAlign:'center', color:"#fff" }}>x0.4</VuiTypography>
+          </Grid>
+          {/*************************/}
+          <Grid item xs={2}>
+            <VuiTypography variant="h5" sx={{textAlign:'center', color:"#fff" }}>
+              <img src={Cherry} width="20px"/>
+            </VuiTypography>
+          </Grid>
+          <Grid item xs={3}>
+            <VuiTypography variant="h5" sx={{textAlign:'center', color:"#fff" }}>x20</VuiTypography>
+          </Grid>
+          <Grid item xs={2}>
+            <VuiTypography variant="h5" sx={{textAlign:'center', color:"#fff" }}>x4</VuiTypography>
+          </Grid>
+          <Grid item xs={2}>
+            <VuiTypography variant="h5" sx={{textAlign:'center', color:"#fff" }}>x1</VuiTypography>
+          </Grid>
+          <Grid item xs={2}>
+            <VuiTypography variant="h5" sx={{textAlign:'center', color:"#fff" }}>x0.2</VuiTypography>
+          </Grid>
+          {/*************************/}
+          <Grid item xs={2}>
+            <VuiTypography variant="h5" sx={{textAlign:'center', color:"#fff" }}>
+              <img src={Tomato} width="20px"/>
+            </VuiTypography>
+          </Grid>
+          <Grid item xs={3}>
+            <VuiTypography variant="h5" sx={{textAlign:'center', color:"#fff" }}>x10</VuiTypography>
+          </Grid>
+          <Grid item xs={2}>
+            <VuiTypography variant="h5" sx={{textAlign:'center', color:"#fff" }}>x2</VuiTypography>
+          </Grid>
+          <Grid item xs={2}>
+            <VuiTypography variant="h5" sx={{textAlign:'center', color:"#fff" }}>x0.5</VuiTypography>
+          </Grid>
+          <Grid item xs={2}>
+            <VuiTypography variant="h5" sx={{textAlign:'center', color:"#fff" }}>x0.1</VuiTypography>
+          </Grid>
+        </Grid>
+      </VuiBox>
     </>
   );
 };

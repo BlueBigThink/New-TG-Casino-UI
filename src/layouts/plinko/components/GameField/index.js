@@ -306,7 +306,8 @@ const GameField = () => {
               },
               '& > div > span' : {
                 borderRadius : '50%',
-                border: "2px solid #0075ff",
+                border: "3px solid",
+                borderColor : type == 0 ? "#0075ff" : (type == 1 ? "orange" : "purple"),
                 color: "#F97316",
                 background: "transparent",
               }

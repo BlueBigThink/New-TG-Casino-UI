@@ -34,10 +34,6 @@ import GradientBorder from "examples/GradientBorder";
 import borders from "assets/theme/base/borders";
 import radialGradient from "assets/theme/functions/radialGradient";
 import Dialog from '@mui/material/Dialog';
-// React icons
-import { FaEthereum } from "react-icons/fa";
-import { SiBinance } from "react-icons/si";
-import { TbCurrencySolana } from "react-icons/tb";
 
 import { setBalance } from "../../../../slices/user.slice";
 import callAPI from "../../../../api/index";
@@ -408,7 +404,8 @@ const GameField = () => {
             },
             '& > div > span' : {
               borderRadius : '50%',
-              border: "2px solid #0075ff",
+              border: "3px solid",
+              borderColor : type == 0 ? "#0075ff" : (type == 1 ? "orange" : "purple"),
               color: "#F97316",
               background: "transparent",
             }
