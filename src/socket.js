@@ -1,5 +1,6 @@
-// import { io } from 'socket.io-client';
-// // const URL = process.env.NODE_ENV === 'production' ? undefined : 'http://localhost:4000';
-// const URL = 'http://127.0.0.1:9000';
+import { io } from 'socket.io-client';
+import { CASINO_SOCKET_SERVER } from './variables/url';
 
-// export const socket = io(URL);
+// const URL = process.env.NODE_ENV === 'production' ? undefined : 'http://localhost:4000';
+
+export const socket = io(CASINO_SOCKET_SERVER);

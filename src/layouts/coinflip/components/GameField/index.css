@@ -1,5 +1,5 @@
 .coin img{
-    width: 150px;
+    width: 100px;
 }
 
 .tails{
@@ -19,8 +19,8 @@
     width: 30px;
 }
 .coin{
-    height: 150px;
-    width: 150px;
+    height: 100px;
+    width: 100px;
     position: relative;
     margin: 10px auto;
     -webkit-transform-style: preserve-3d;

@@ -1,86 +1,63 @@
-import { useState, useEffect, useMemo } from "react";
-// react-router components
-import { Route, Switch, useLocation, Redirect } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Route, Switch, useLocation } from "react-router-dom";
 import { useDispatch } from "react-redux";
-// @mui material components
 import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
-import Icon from "@mui/material/Icon";
-
-// Vision UI Dashboard React components
-import VuiBox from "components/VuiBox";
-
-// Vision UI Dashboard React example components
 import Sidenav from "examples/Sidenav";
 
-// Vision UI Dashboard React themes
 import theme from "assets/theme";
-
-// Vision UI Dashboard React routes
 import routes from "routes";
-
-// Vision UI Dashboard React contexts
-import { useVisionUIController, setMiniSidenav } from "context";
+import { useVisionUIController, setMiniSidenav, setIsConnected } from "context";
 import callAPI from "./api/index";
 
 import { CASINO_SERVER } from "./variables/url";
-import { setETH, setBNB } from "./slices/price.slice";
-// import {socket} from './socket';
+import { setETH, setBNB, setSOL, setUNT } from "./slices/price.slice";
+import {socket} from './socket';
 
 export default function App() {
   const [controller, dispatch] = useVisionUIController();
   const { miniSidenav, direction, layout, sidenavColor } = controller;
   const [onMouseEnter, setOnMouseEnter] = useState(false);
   const { pathname } = useLocation();
-  // const [isConnected, setIsConnected] = useState(socket.connected);
-  // const [events, setEvents] = useState([])
   const reduxDispatch = useDispatch();
 
-  useEffect(() => {
-    const fetchPrice = async () => {
-      try {
-        const config = {
-          method: 'GET',
-          url: `${CASINO_SERVER}/price`
-        }
-        const priceData = await callAPI(config);
-        reduxDispatch(setETH(priceData[0][3]))
-        reduxDispatch(setBNB(priceData[1][3]))
-        // reduxDispatch(setETH(priceData[0]['Price']))
-        // reduxDispatch(setBNB(priceData[1]['Price']))
-      } catch (err) {
-        console.error("Failed to fetch price", err);
+  const fetchPrice = async () => {
+    try {
+      const config = {
+        method: 'GET',
+        url: `${CASINO_SERVER}/price`
       }
-    };
+      const priceData = await callAPI(config);
+      reduxDispatch(setETH(priceData['ETH']))
+      reduxDispatch(setBNB(priceData['BNB']))
+      reduxDispatch(setSOL(priceData['SOL']))
+      reduxDispatch(setUNT(priceData['UNT']))
+    } catch (err) {
+      console.error("Failed to fetch price", err);
+    }
+  };
+  const onConnect = () => {
+    setIsConnected(dispatch, true);
+    console.log('connected')
+  }
+  const onDisconnect = () => {
+    setIsConnected(dispatch, false);
+    console.log('disconnected')
+  }
+
+  useEffect(() => {
     fetchPrice();
     const intervalId = setInterval(fetchPrice, 60000);
-    return () => clearInterval(intervalId);
+    socket.on('connect', onConnect)
+    socket.on('disconnect', onDisconnect)
+
+
+    return () => {
+      clearInterval(intervalId);
+      socket.off('connect', onConnect)
+      socket.off('disconnect', onDisconnect)
+    }
   },[])
-
-  // useEffect(() => {
-  //   function onConnect() {
-  //     setIsConnected(true);
-  //     console.log('connected')
-  //   }
-  //   function onDisconnect() {
-  //     setIsConnected(false);
-  //     console.log('disconnected')
-  //   }
-  //   function onEvent(value) {
-  //     console.log(value)
-  //     setEvents(previous => [...previous, value]);
-  //   }
-
-  //   socket.on('connect', onConnect)
-  //   socket.on('disconnect', onDisconnect)
-  //   socket.on('my_response', onEvent)
-
-  //   return () => {
-  //     socket.off('connect', onConnect)
-  //     socket.off('disconnect', onDisconnect)
-  //     socket.off('event', onEvent)
-  //   }
-  // }, [])
   // Open sidenav when mouse enter on mini sidenav
   const handleOnMouseEnter = () => {
     if (miniSidenav && !onMouseEnter) {
@@ -138,7 +115,6 @@ export default function App() {
       )}
       <Switch>
         {getRoutes(routes)}
-        {/* <Redirect from="*" to="/home" /> */}
       </Switch>
     </ThemeProvider>
   );
