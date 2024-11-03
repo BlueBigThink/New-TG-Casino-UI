@@ -63,7 +63,7 @@ function Dashboard() {
               <Link to="/coinflip">
                 <MiniStatisticsCard
                   sx={{'& > div > div > div.MuiGrid-container' : {justifyContent: "space-between"} }}
-                  title={{ text: "UniChat", fontWeight: "regular" }}
+                  title={{ text: "TG Casino", fontWeight: "regular" }}
                   count="CoinFlip"
                   
                   // percentage={{ color: "success", text: "+55%" }}
@@ -74,7 +74,7 @@ function Dashboard() {
             <Grid item xs={12}>
               <Link to="/slot">
                 <MiniStatisticsCard
-                  title={{ text: "UniChat", fontWeight: "regular" }}
+                  title={{ text: "TG Casino", fontWeight: "regular" }}
                   count="Slot"
                   // percentage={{ color: "success", text: "+55%" }}
                   icon={{ color: "info", component: <img src={Slot} width="22px" height="22px"/> }}
@@ -84,7 +84,7 @@ function Dashboard() {
             <Grid item xs={12}>
               <Link to="/plinko">
                 <MiniStatisticsCard
-                  title={{ text: "UniChat", fontWeight: "regular" }}
+                  title={{ text: "TG Casino", fontWeight: "regular" }}
                   count="Plinko"
                   // percentage={{ color: "success", text: "+55%" }}
                   icon={{ color: "info", component: <img src={Plinko} width="22px" height="22px"/> }}

@@ -23,7 +23,7 @@ const WelcomeMark = () => {
       <VuiBox height="100%" display="flex" flexDirection="column" justifyContent="space-between">
         <VuiBox>
           <VuiTypography color="white" variant="button" fontWeight="regular" mb="12px">
-            Welcome To UniChat,
+            Welcome To TG Casino,
           </VuiTypography>
           <VuiTypography color="white" variant="h3" fontWeight="bold">
             {name} 
@@ -59,7 +59,7 @@ const WelcomeMark = () => {
             },
           }}
         >
-          UniChat
+          TG Casino
           <Icon sx={{ fontWeight: "bold", ml: "5px" }}>arrow_forward</Icon>
         </VuiTypography>
       </VuiBox>

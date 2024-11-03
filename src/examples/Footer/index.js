@@ -21,7 +21,7 @@ function Footer() {
           sx={{ textAlign: "center", fontWeight: "400 !important" }}
           color="white"
         >
-          @ {new Date().getFullYear()} - UniChat
+          @ {new Date().getFullYear()} - TG Casino
         </VuiTypography>
       </VuiBox>
       {/* <VuiBox item xs={10}>
